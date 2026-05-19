@@ -1,0 +1,1887 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0A2B5C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ViajeBrasil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0A0A0F;
+  color: #0F172A;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100svh;
+}
+.frame {
+  width: 100%; height: 100svh;
+  max-width: 440px;
+  position: relative;
+  background: #F5F7FB;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+@media (min-width: 768px) {
+  body { background: radial-gradient(circle at 30% 20%, #1a2540 0%, #0a0a0f 60%); }
+  .frame {
+    height: 880px;
+    border-radius: 48px;
+    box-shadow: 0 0 0 12px #1a1a22, 0 0 0 14px #2d2d3a, 0 40px 80px rgba(0,0,0,0.5);
+  }
+  .notch { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 110px; height: 32px; background: #0a0a0f; border-radius: 20px; z-index: 1000; }
+}
+@media (max-width: 767px) { .notch { display: none; } }
+
+:root {
+  --navy: #0A2B5C;
+  --navy-dark: #061E44;
+  --blue: #1E4FBF;
+  --blue-light: #E8F1FF;
+  --green: #00A859;
+  --green-dark: #008548;
+  --green-light: #E6F7EE;
+  --yellow: #FFB400;
+  --yellow-dark: #E69E00;
+  --pix: #32BCAD;
+  --red: #DC2626;
+  --text: #0F172A;
+  --text-muted: #64748B;
+  --text-subtle: #94A3B8;
+  --border: #E2E8F0;
+  --bg: #FFFFFF;
+  --bg-alt: #F5F7FB;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  background: var(--bg-alt);
+  transform: translateX(100%);
+  transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 1;
+}
+.screen.active { transform: translateX(0); z-index: 10; }
+
+/* ===== SPLASH ===== */
+#splash {
+  background: linear-gradient(135deg, #0A2B5C 0%, #061E44 100%);
+  align-items: center; justify-content: center;
+  color: #fff;
+  transform: translateX(0);
+  z-index: 2000;
+  transition: opacity 0.5s ease;
+}
+#splash.hidden { opacity: 0; pointer-events: none; }
+.splash-logo-text {
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  display: flex; align-items: center; gap: 12px;
+  animation: splashIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.splash-logo-text span.brasil { color: var(--green); }
+.splash-mapa {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--green), #006B3C);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0,168,89,0.4);
+}
+.splash-mapa::after {
+  content: '🇧🇷';
+  font-size: 28px;
+}
+.splash-tag {
+  margin-top: 16px;
+  font-size: 12px;
+  opacity: 0.7;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+@keyframes splashIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ===== HEADER COM IMAGEM DE FUNDO ===== */
+.header-hero {
+  background: linear-gradient(135deg, rgba(10,43,92,0.92) 0%, rgba(6,30,68,0.85) 60%, rgba(6,30,68,0.5) 100%),
+              url('https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=800&q=80');
+  background-size: cover;
+  background-position: center right;
+  padding: calc(var(--safe-top) + 14px) 20px 28px;
+  color: #fff;
+  position: relative;
+}
+.header-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px;
+}
+.header-logo {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  display: flex; align-items: center; gap: 8px;
+}
+.header-logo .brasil { color: var(--green); }
+.header-logo-mark {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--green), #006B3C);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.header-icons { display: flex; gap: 8px; }
+.header-icon-btn {
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 16px;
+  backdrop-filter: blur(10px);
+}
+.header-hero-titulo {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  max-width: 70%;
+}
+.header-hero-titulo .destaque {
+  position: relative;
+  display: inline-block;
+  color: var(--yellow);
+}
+.header-hero-titulo .destaque::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -2px;
+  height: 3px;
+  background: var(--yellow);
+  border-radius: 2px;
+}
+.header-hero-sub {
+  font-size: 13px;
+  opacity: 0.88;
+  margin-top: 10px;
+  font-weight: 400;
+  line-height: 1.4;
+  max-width: 60%;
+}
+
+/* ===== CONTEÚDO ===== */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 100px;
+}
+
+/* ===== CARD DE BUSCA ===== */
+.search-card {
+  background: #fff;
+  margin: -16px 16px 0;
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 12px 32px rgba(10, 43, 92, 0.15), 0 2px 8px rgba(0,0,0,0.04);
+  position: relative;
+  z-index: 2;
+}
+.tab-bar-modos {
+  display: flex;
+  background: var(--bg-alt);
+  border-radius: 999px;
+  padding: 4px;
+  margin-bottom: 16px;
+}
+.tab-modo {
+  flex: 1;
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.tab-modo.active { background: var(--navy); color: #fff; }
+.tab-modo .ic { font-size: 14px; }
+
+.fields {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+}
+.field {
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.field:active { background: #FAFBFD; }
+.field:last-child { border-bottom: none; }
+.field-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.field-icon.green { background: var(--green-light); color: var(--green); }
+.field-icon.blue { background: var(--blue-light); color: var(--blue); }
+.field-body { flex: 1; }
+.field-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.field-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 2px;
+}
+.field-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.field-chevron { color: var(--text-subtle); font-size: 14px; }
+
+.fields-row { display: flex; }
+.fields-row .field { flex: 1; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.fields-row .field:last-child { border-right: none; }
+
+.swap-btn {
+  position: absolute;
+  right: 16px;
+  top: 110px;
+  width: 44px; height: 44px;
+  background: #fff;
+  border: 1.5px solid var(--green);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.swap-btn svg { width: 18px; height: 18px; }
+
+.search-button {
+  margin-top: 16px;
+  width: 100%;
+  height: 56px;
+  background: linear-gradient(135deg, var(--yellow) 0%, var(--yellow-dark) 100%);
+  border: none;
+  border-radius: 14px;
+  color: var(--text);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 6px 20px rgba(255, 180, 0, 0.4);
+  transition: transform 0.1s;
+}
+.search-button:active { transform: scale(0.98); }
+
+/* ===== SEÇÕES ===== */
+.section { padding: 24px 16px 0; }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+.section-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.section-link { font-size: 13px; color: var(--blue); font-weight: 600; }
+
+/* ===== DESTINOS GRID ===== */
+.destinos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0 16px;
+  scroll-snap-type: x mandatory;
+}
+.destinos-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 0 16px 4px;
+  scrollbar-width: none;
+}
+.destinos-scroll::-webkit-scrollbar { display: none; }
+.destino-card {
+  flex: 0 0 130px;
+  height: 170px;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+}
+.destino-img {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+.destino-card::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%);
+}
+.destino-body {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 12px;
+  color: #fff;
+  z-index: 1;
+}
+.destino-name { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+.destino-uf { font-size: 11px; opacity: 0.9; font-weight: 500; }
+
+/* ===== BENEFÍCIOS GRID ===== */
+.beneficios-grid {
+  background: #fff;
+  margin: 24px 16px 0;
+  border-radius: 18px;
+  padding: 20px 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.beneficio-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+.beneficio-ico {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.beneficio-ico.green { background: var(--green-light); color: var(--green); }
+.beneficio-ico.yellow { background: #FFF6E0; color: var(--yellow-dark); }
+.beneficio-ico.blue { background: var(--blue-light); color: var(--blue); }
+.beneficio-titulo {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+.beneficio-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+/* ===== OFERTAS ===== */
+.ofertas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px; }
+.oferta-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.oferta-img {
+  height: 100px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+.oferta-badge {
+  position: absolute;
+  top: 8px; left: 8px;
+  background: var(--yellow);
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.oferta-body { padding: 10px 12px 12px; }
+.oferta-rota { font-size: 12px; color: var(--text-muted); }
+.oferta-titulo { font-weight: 600; font-size: 13px; margin-top: 2px; color: var(--text); }
+.oferta-preco { font-size: 16px; font-weight: 800; color: var(--navy); margin-top: 6px; }
+
+/* ===== BOTTOM NAV ===== */
+.tab-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(255,255,255,0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  padding: 8px 8px calc(8px + var(--safe-bottom));
+  display: flex;
+  z-index: 50;
+}
+.tab-item {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 3px;
+  padding: 6px 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+.tab-item.active { color: var(--navy); }
+.tab-item-icon { font-size: 22px; }
+
+/* ===== RESULTADOS ===== */
+.result-header {
+  background: linear-gradient(135deg, #0A2B5C 0%, #061E44 100%);
+  padding: calc(var(--safe-top) + 16px) 20px 16px;
+  color: #fff;
+}
+.result-filter-bar {
+  background: #fff;
+  padding: 12px 16px;
+  display: flex; gap: 8px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  scrollbar-width: none;
+}
+.result-filter-bar::-webkit-scrollbar { display: none; }
+.filter-chip {
+  padding: 8px 14px;
+  background: var(--bg-alt);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.filter-chip.active { background: var(--navy); color: #fff; }
+
+.viagem-card {
+  background: #fff;
+  margin: 12px 16px 0;
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.viagem-card:active { transform: scale(0.99); }
+.viagem-topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.viagem-via { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
+.viagem-via-logo {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--navy), var(--navy-dark));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: #fff; font-size: 12px;
+}
+.viagem-classe {
+  background: var(--green-light);
+  color: var(--green);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.viagem-rota {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.rota-ponta.right { text-align: right; }
+.rota-hora { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+.rota-cidade { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.rota-meio { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: var(--text-muted); }
+.rota-linha {
+  width: 100%; height: 2px;
+  background: linear-gradient(to right, var(--border) 50%, transparent 50%);
+  background-size: 8px 2px;
+  margin: 4px 0;
+  position: relative;
+}
+.rota-linha::before, .rota-linha::after {
+  content: '';
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.rota-linha::before { left: 0; }
+.rota-linha::after { right: 0; }
+.viagem-rodape {
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.viagem-poltronas { font-size: 12px; color: var(--text-muted); }
+.viagem-preco { font-size: 22px; font-weight: 800; color: var(--navy); letter-spacing: -0.02em; }
+.viagem-preco small { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+/* ===== HOSPEDAGENS ===== */
+.hotel-card {
+  background: #fff;
+  margin: 12px 16px 0;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  cursor: pointer;
+}
+.hotel-img { height: 180px; background-size: cover; background-position: center; position: relative; }
+.hotel-fav {
+  position: absolute; top: 12px; right: 12px;
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  color: var(--red);
+}
+.hotel-body { padding: 14px; }
+.hotel-nome { font-weight: 700; font-size: 16px; }
+.hotel-local { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.hotel-rating { display: flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 12px; }
+.hotel-rating .star { color: var(--yellow); }
+.hotel-rating .num { font-weight: 600; }
+.hotel-rating .count { color: var(--text-muted); }
+.hotel-preco-row { display: flex; align-items: baseline; justify-content: space-between; margin-top: 10px; }
+.hotel-preco { font-size: 20px; font-weight: 800; color: var(--navy); }
+.hotel-preco small { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+/* ===== PACOTES ===== */
+.pacote-card {
+  margin: 12px 16px 0;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #fff;
+  position: relative;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  cursor: pointer;
+}
+.pacote-img { height: 200px; background-size: cover; background-position: center; position: relative; }
+.pacote-img::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.7) 100%); }
+.pacote-badge-desconto {
+  position: absolute; top: 14px; left: 14px;
+  background: var(--yellow);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 999px;
+  z-index: 1;
+}
+.pacote-titulo-img {
+  position: absolute; bottom: 14px; left: 14px; right: 14px;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  z-index: 1;
+}
+.pacote-body { padding: 16px; }
+.pacote-meta { display: flex; gap: 14px; margin-bottom: 12px; }
+.pacote-meta-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-muted); }
+.pacote-inclui { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.pacote-tag {
+  background: var(--green-light);
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.pacote-preco-bloco { display: flex; align-items: baseline; justify-content: space-between; }
+.pacote-preco-orig { font-size: 12px; color: var(--text-muted); text-decoration: line-through; }
+.pacote-preco { font-size: 24px; font-weight: 800; color: var(--navy); }
+.pacote-preco small { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+/* ===== FRETAMENTO ===== */
+.fret-veiculo {
+  background: #fff;
+  margin: 12px 16px 0;
+  padding: 16px;
+  border-radius: 16px;
+  display: flex; align-items: center; gap: 14px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.fret-veiculo.selecionado { border-color: var(--green); background: var(--green-light); }
+.fret-veiculo-icon {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: var(--green-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+}
+.fret-veiculo-body { flex: 1; }
+.fret-veiculo-nome { font-weight: 700; font-size: 16px; }
+.fret-veiculo-cap { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.fret-veiculo-preco { font-weight: 800; color: var(--navy); }
+.fret-form { padding: 0 16px; margin-top: 20px; }
+.fret-input-row { margin-bottom: 14px; }
+.fret-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+.fret-input {
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text);
+}
+.fret-input:focus { outline: none; border-color: var(--green); }
+textarea.fret-input { resize: none; min-height: 80px; }
+
+/* ===== PERFIL ===== */
+.perfil-header {
+  background: linear-gradient(135deg, #0A2B5C 0%, #061E44 100%);
+  padding: calc(var(--safe-top) + 30px) 20px 60px;
+  text-align: center;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+.perfil-avatar {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: var(--yellow);
+  margin: 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+.perfil-nome { font-size: 22px; font-weight: 800; margin-top: 12px; }
+.perfil-email { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+.perfil-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  background: #fff;
+  margin: -40px 16px 0;
+  border-radius: 18px;
+  padding: 16px 0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  position: relative;
+  z-index: 1;
+}
+.perfil-stat { text-align: center; border-right: 1px solid var(--border); }
+.perfil-stat:last-child { border-right: none; }
+.perfil-stat-num { font-size: 24px; font-weight: 800; color: var(--navy); }
+.perfil-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.perfil-menu { padding: 24px 16px; }
+.perfil-item {
+  background: #fff;
+  padding: 16px;
+  display: flex; align-items: center; gap: 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.perfil-item-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--bg-alt); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.perfil-item-label { flex: 1; font-size: 15px; font-weight: 500; }
+.perfil-item-arrow { color: var(--text-subtle); }
+
+/* ===== DETALHE ===== */
+.detalhe-header {
+  background: linear-gradient(135deg, #0A2B5C 0%, #061E44 100%);
+  padding: calc(var(--safe-top) + 16px) 20px 16px;
+  color: #fff;
+}
+.header-row-back { display: flex; align-items: center; justify-content: space-between; }
+.header-back-btn {
+  width: 40px; height: 40px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 20px;
+  cursor: pointer;
+}
+.header-title-text { font-weight: 600; font-size: 16px; }
+
+.detalhe-card {
+  background: #fff;
+  margin: 16px;
+  border-radius: 18px;
+  padding: 20px;
+}
+.detalhe-linha {
+  display: flex; justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.detalhe-linha:last-child { border-bottom: none; }
+.detalhe-rotulo { color: var(--text-muted); font-size: 13px; }
+.detalhe-valor { font-weight: 600; font-size: 14px; }
+.detalhe-inclui { padding: 14px 0; display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.detalhe-check { color: var(--green); font-size: 18px; }
+.detalhe-rodape {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: #fff;
+  padding: 16px 16px calc(16px + var(--safe-bottom));
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 14px;
+}
+.detalhe-total-label { font-size: 11px; color: var(--text-muted); }
+.detalhe-total-valor { font-size: 24px; font-weight: 800; color: var(--navy); }
+.btn-continuar {
+  flex: 1;
+  height: 52px;
+  background: linear-gradient(135deg, var(--yellow), var(--yellow-dark));
+  border: none; border-radius: 14px;
+  color: var(--text); font-family: inherit; font-weight: 700; font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(255,180,0,0.4);
+}
+
+/* ===== CHECKOUT ===== */
+.checkout-resumo {
+  background: #fff;
+  margin: 16px;
+  border-radius: 18px;
+  padding: 16px;
+}
+.checkout-resumo-topo {
+  display: flex; align-items: center; gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.checkout-rota-mini {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0 4px;
+}
+.checkout-secao {
+  background: #fff;
+  margin: 12px 16px 0;
+  border-radius: 18px;
+  padding: 18px;
+}
+.checkout-secao-titulo { font-size: 17px; font-weight: 800; margin-bottom: 14px; }
+.pagamento-opcao {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: all 0.2s;
+}
+.pagamento-opcao.selecionado { border-color: var(--green); background: var(--green-light); }
+.pagamento-radio {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  position: relative;
+  flex-shrink: 0;
+}
+.pagamento-opcao.selecionado .pagamento-radio { border-color: var(--green); }
+.pagamento-opcao.selecionado .pagamento-radio::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.pagamento-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: var(--bg-alt);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.pagamento-icon.pix { background: rgba(50,188,173,0.1); color: var(--pix); }
+.pagamento-body { flex: 1; }
+.pagamento-nome { font-weight: 600; font-size: 14px; }
+.pagamento-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.pagamento-tag-desconto {
+  background: var(--pix); color: #fff;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 8px; border-radius: 6px;
+  display: inline-block; margin-left: 6px;
+}
+.resumo-total {
+  background: #fff;
+  margin: 12px 16px 0;
+  border-radius: 18px;
+  padding: 18px;
+}
+.resumo-linha { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+.resumo-linha.total { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 8px; }
+.resumo-rotulo { color: var(--text-muted); }
+.resumo-valor { color: var(--text); font-weight: 500; }
+.total-rotulo { font-weight: 700; font-size: 15px; }
+.total-valor { font-weight: 800; font-size: 22px; color: var(--navy); }
+
+/* ===== PIX ===== */
+.pix-tela { text-align: center; padding: 30px 24px; background: #fff; }
+.pix-qr {
+  width: 220px; height: 220px;
+  margin: 20px auto;
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+.pix-qr svg { width: 100%; height: 100%; }
+.pix-instrucoes {
+  text-align: left;
+  background: #fff;
+  margin: 16px;
+  padding: 18px;
+  border-radius: 16px;
+}
+.pix-passo { display: flex; gap: 12px; padding: 8px 0; }
+.pix-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.pix-codigo {
+  background: var(--bg-alt);
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin: 16px;
+  font-family: monospace;
+  font-size: 11px;
+  word-break: break-all;
+  color: var(--text-muted);
+}
+.pix-copiar {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin: 16px;
+  padding: 14px;
+  background: var(--pix);
+  color: #fff;
+  border-radius: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pix-timer { text-align: center; padding: 12px; font-size: 13px; color: var(--text-muted); background: #fff; }
+.pix-timer strong { color: var(--navy); font-size: 18px; }
+
+/* ===== LOGIN ===== */
+.login-top {
+  background: linear-gradient(135deg, #0A2B5C 0%, #061E44 100%);
+  padding: calc(var(--safe-top) + 30px) 20px 60px;
+  color: #fff;
+}
+.login-titulo { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
+.login-sub { font-size: 14px; opacity: 0.9; margin-top: 6px; }
+.login-form { padding: 28px 20px; background: #fff; border-radius: 20px 20px 0 0; margin-top: -20px; position: relative; }
+.login-tabs {
+  display: flex;
+  background: var(--bg-alt);
+  border-radius: 14px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+.login-tab {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.login-tab.active { background: var(--navy); color: #fff; }
+.login-input-row { margin-bottom: 16px; }
+.login-esqueci { text-align: right; font-size: 13px; color: var(--blue); font-weight: 600; margin-top: -8px; margin-bottom: 16px; cursor: pointer; }
+.login-divisor { display: flex; align-items: center; gap: 12px; margin: 24px 0; }
+.login-divisor::before, .login-divisor::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.login-divisor-texto { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+.login-social { display: flex; gap: 10px; }
+.login-social-btn {
+  flex: 1; height: 52px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+.login-rodape { text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px; }
+.login-rodape a { color: var(--blue); font-weight: 600; cursor: pointer; }
+
+/* ===== TOAST ===== */
+.toast {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--navy);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s;
+  z-index: 300;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+  display: flex;
+  align-items: flex-end;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal-sheet {
+  background: #fff;
+  width: 100%;
+  border-radius: 24px 24px 0 0;
+  padding: 12px 0 calc(20px + var(--safe-bottom));
+  max-height: 85%;
+  display: flex; flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.modal-overlay.open .modal-sheet { transform: translateY(0); }
+.modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 12px; }
+.modal-title { font-size: 22px; font-weight: 800; padding: 0 20px 16px; letter-spacing: -0.02em; }
+.modal-search { padding: 0 20px 12px; }
+.modal-search input {
+  width: 100%; height: 48px;
+  background: var(--bg-alt);
+  border: none; border-radius: 12px;
+  padding: 0 16px;
+  font-size: 15px;
+  color: var(--text);
+}
+.modal-search input:focus { outline: 2px solid var(--green); }
+.modal-list { overflow-y: auto; }
+.cidade-item {
+  padding: 14px 20px;
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.cidade-item:active { background: var(--bg-alt); }
+.cidade-icon { color: var(--green); }
+.cidade-nome { font-size: 15px; font-weight: 500; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.content > * { animation: fadeUp 0.4s ease backwards; }
+.content > *:nth-child(1) { animation-delay: 0.05s; }
+.content > *:nth-child(2) { animation-delay: 0.1s; }
+.content > *:nth-child(3) { animation-delay: 0.15s; }
+.content > *:nth-child(4) { animation-delay: 0.2s; }
+</style>
+</head>
+<body>
+
+<div class="frame">
+<div class="notch"></div>
+
+<!-- SPLASH -->
+<div class="screen" id="splash">
+  <div style="text-align: center;">
+    <div class="splash-logo-text">
+      <div class="splash-mapa"></div>
+      <div><span style="color: #fff;">viaje</span><span class="brasil">brasil</span></div>
+    </div>
+    <div class="splash-tag">PASSAGENS · HOSPEDAGENS · PACOTES</div>
+  </div>
+</div>
+
+<!-- HOME PASSAGENS -->
+<div class="screen active" id="screen-home" data-tab="passagens">
+  <div class="header-hero">
+    <div class="header-row">
+      <div class="header-logo">
+        <div class="header-logo-mark">🇧🇷</div>
+        <span>viaje<span class="brasil">brasil</span></span>
+      </div>
+      <div class="header-icons">
+        <div class="header-icon-btn">🔔</div>
+        <div class="header-icon-btn">⋯</div>
+      </div>
+    </div>
+    <div class="header-hero-titulo">
+      Oi, viajante!<br>
+      Pra onde <span class="destaque">vamos hoje?</span>
+    </div>
+    <div class="header-hero-sub">Encontre passagens para os melhores destinos do Brasil e do mundo.</div>
+  </div>
+
+  <div class="content">
+    <div class="search-card">
+      <div class="tab-bar-modos">
+        <div class="tab-modo active"><span class="ic">✈️</span>Ida e volta</div>
+        <div class="tab-modo"><span class="ic">✈️</span>Só ida</div>
+      </div>
+
+      <div class="fields">
+        <div class="field" onclick="abrirCidade('origem')">
+          <div class="field-icon green">📍</div>
+          <div class="field-body">
+            <div class="field-label">DE ONDE</div>
+            <div class="field-value" id="origem-val">Goiânia, GO</div>
+          </div>
+        </div>
+        <div class="field" onclick="abrirCidade('destino')">
+          <div class="field-icon green">🎯</div>
+          <div class="field-body">
+            <div class="field-label">PARA ONDE</div>
+            <div class="field-value" id="destino-val">Rio de Janeiro, RJ</div>
+          </div>
+        </div>
+        <div class="fields-row">
+          <div class="field">
+            <div class="field-icon blue">📅</div>
+            <div class="field-body">
+              <div class="field-label">IDA</div>
+              <div class="field-value">22 Mai</div>
+              <div class="field-sub">Sexta-feira</div>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-icon blue">📅</div>
+            <div class="field-body">
+              <div class="field-label">VOLTA</div>
+              <div class="field-value">26 Mai</div>
+              <div class="field-sub">Terça-feira</div>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-icon green">👥</div>
+          <div class="field-body">
+            <div class="field-label">PASSAGEIROS</div>
+            <div class="field-value">1 adulto</div>
+          </div>
+          <div class="field-chevron">▾</div>
+        </div>
+        <div class="swap-btn" onclick="swap()">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 4v16M7 4l-3 3M7 4l3 3" stroke="#1E4FBF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M17 20V4M17 20l-3-3M17 20l3-3" stroke="#00A859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <button class="search-button" onclick="navegar('screen-resultados')">
+        🔍 Buscar passagens
+      </button>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Destinos em alta</div>
+        <div class="section-link">Ver todos →</div>
+      </div>
+    </div>
+    <div class="destinos-scroll">
+      <div class="destino-card" onclick="navegar('screen-resultados')">
+        <div class="destino-img" style="background-image: url('https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=400&q=80');"></div>
+        <div class="destino-body">
+          <div class="destino-name">Rio de Janeiro</div>
+          <div class="destino-uf">RJ</div>
+        </div>
+      </div>
+      <div class="destino-card" onclick="navegar('screen-resultados')">
+        <div class="destino-img" style="background-image: url('https://images.unsplash.com/photo-1554995207-c18c203602cb?w=400&q=80');"></div>
+        <div class="destino-body">
+          <div class="destino-name">Salvador</div>
+          <div class="destino-uf">BA</div>
+        </div>
+      </div>
+      <div class="destino-card" onclick="navegar('screen-resultados')">
+        <div class="destino-img" style="background-image: url('https://images.unsplash.com/photo-1565963571097-77a3b80ee47b?w=400&q=80');"></div>
+        <div class="destino-body">
+          <div class="destino-name">Fortaleza</div>
+          <div class="destino-uf">CE</div>
+        </div>
+      </div>
+      <div class="destino-card" onclick="navegar('screen-resultados')">
+        <div class="destino-img" style="background-image: url('https://images.unsplash.com/photo-1597950381040-2c40462b8757?w=400&q=80');"></div>
+        <div class="destino-body">
+          <div class="destino-name">Gramado</div>
+          <div class="destino-uf">RS</div>
+        </div>
+      </div>
+      <div class="destino-card" onclick="navegar('screen-resultados')">
+        <div class="destino-img" style="background-image: url('https://images.unsplash.com/photo-1543059080-f9b1272213d5?w=400&q=80');"></div>
+        <div class="destino-body">
+          <div class="destino-name">São Paulo</div>
+          <div class="destino-uf">SP</div>
+        </div>
+      </div>
+      <div class="destino-card" onclick="navegar('screen-resultados')">
+        <div class="destino-img" style="background-image: url('https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=400&q=80');"></div>
+        <div class="destino-body">
+          <div class="destino-name">Florianópolis</div>
+          <div class="destino-uf">SC</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="beneficios-grid">
+      <div class="beneficio-item">
+        <div class="beneficio-ico green">🛡️</div>
+        <div class="beneficio-titulo">Compra segura</div>
+        <div class="beneficio-sub">Seus dados protegidos</div>
+      </div>
+      <div class="beneficio-item">
+        <div class="beneficio-ico yellow">🏷️</div>
+        <div class="beneficio-titulo">Melhores preços</div>
+        <div class="beneficio-sub">Garantia ViajeBrasil</div>
+      </div>
+      <div class="beneficio-item">
+        <div class="beneficio-ico blue">🎧</div>
+        <div class="beneficio-titulo">Atendimento</div>
+        <div class="beneficio-sub">Suporte humanizado</div>
+      </div>
+      <div class="beneficio-item">
+        <div class="beneficio-ico green">⚡</div>
+        <div class="beneficio-titulo">Facilidade</div>
+        <div class="beneficio-sub">Rápido e prático</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><div class="section-title">Ofertas imperdíveis</div></div>
+    </div>
+    <div class="ofertas-grid">
+      <div class="oferta-card" onclick="navegar('screen-resultados')">
+        <div class="oferta-img" style="background-image: url('https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=400&q=80');">
+          <div class="oferta-badge">20% OFF</div>
+        </div>
+        <div class="oferta-body">
+          <div class="oferta-rota">SP → RJ</div>
+          <div class="oferta-titulo">Ida e volta</div>
+          <div class="oferta-preco">R$ 159</div>
+        </div>
+      </div>
+      <div class="oferta-card" onclick="navegar('screen-resultados')">
+        <div class="oferta-img" style="background-image: url('https://images.unsplash.com/photo-1565963571097-77a3b80ee47b?w=400&q=80');">
+          <div class="oferta-badge">15% OFF</div>
+        </div>
+        <div class="oferta-body">
+          <div class="oferta-rota">BH → Vitória</div>
+          <div class="oferta-titulo">Só ida</div>
+          <div class="oferta-preco">R$ 119</div>
+        </div>
+      </div>
+      <div class="oferta-card" onclick="navegar('screen-resultados')">
+        <div class="oferta-img" style="background-image: url('https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=400&q=80');">
+          <div class="oferta-badge">10% OFF</div>
+        </div>
+        <div class="oferta-body">
+          <div class="oferta-rota">Curitiba → Floripa</div>
+          <div class="oferta-titulo">Final de semana</div>
+          <div class="oferta-preco">R$ 89</div>
+        </div>
+      </div>
+      <div class="oferta-card" onclick="navegar('screen-resultados')">
+        <div class="oferta-img" style="background-image: url('https://images.unsplash.com/photo-1554995207-c18c203602cb?w=400&q=80');">
+          <div class="oferta-badge">10% OFF</div>
+        </div>
+        <div class="oferta-body">
+          <div class="oferta-rota">Salvador → Recife</div>
+          <div class="oferta-titulo">Pacote casal</div>
+          <div class="oferta-preco">R$ 199</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTADOS -->
+<div class="screen" id="screen-resultados">
+  <div class="result-header">
+    <div class="header-row-back">
+      <div class="header-back-btn" onclick="voltar('screen-home')">←</div>
+      <div style="text-align: center;">
+        <div style="font-weight: 700; font-size: 15px;">Goiânia → Rio de Janeiro</div>
+        <div style="font-size: 11px; opacity: 0.8;">Sex, 22 Mai · 1 passageiro</div>
+      </div>
+      <div style="width: 40px;"></div>
+    </div>
+  </div>
+  <div class="result-filter-bar">
+    <div class="filter-chip active">↕ Mais barato</div>
+    <div class="filter-chip">⚡ Mais rápido</div>
+    <div class="filter-chip">⏰ Manhã</div>
+    <div class="filter-chip">🌙 Noite</div>
+    <div class="filter-chip">⭐ Executivo</div>
+  </div>
+  <div class="content" style="padding-top: 4px;">
+    <div class="viagem-card" onclick="navegar('screen-detalhe')">
+      <div class="viagem-topo">
+        <div class="viagem-via"><div class="viagem-via-logo">VC</div><span>Viação Cometa</span></div>
+        <div class="viagem-classe">Convencional</div>
+      </div>
+      <div class="viagem-rota">
+        <div class="rota-ponta"><div class="rota-hora">06:30</div><div class="rota-cidade">Goiânia</div></div>
+        <div class="rota-meio"><div style="font-size: 11px;">14h 30min</div><div class="rota-linha"></div><div style="font-size: 10px;">direto</div></div>
+        <div class="rota-ponta right"><div class="rota-hora">21:00</div><div class="rota-cidade">Rio de Janeiro</div></div>
+      </div>
+      <div class="viagem-rodape">
+        <div class="viagem-poltronas">🪑 32 poltronas livres</div>
+        <div class="viagem-preco">R$ 189<small> /pessoa</small></div>
+      </div>
+    </div>
+    <div class="viagem-card" onclick="navegar('screen-detalhe')">
+      <div class="viagem-topo">
+        <div class="viagem-via"><div class="viagem-via-logo" style="background: linear-gradient(135deg, #00A859, #006B3C);">IT</div><span>Itapemirim</span></div>
+        <div class="viagem-classe">Executivo</div>
+      </div>
+      <div class="viagem-rota">
+        <div class="rota-ponta"><div class="rota-hora">08:00</div><div class="rota-cidade">Goiânia</div></div>
+        <div class="rota-meio"><div style="font-size: 11px;">13h 45min</div><div class="rota-linha"></div><div style="font-size: 10px;">direto</div></div>
+        <div class="rota-ponta right"><div class="rota-hora">21:45</div><div class="rota-cidade">Rio de Janeiro</div></div>
+      </div>
+      <div class="viagem-rodape">
+        <div class="viagem-poltronas">🪑 18 poltronas livres</div>
+        <div class="viagem-preco">R$ 229<small> /pessoa</small></div>
+      </div>
+    </div>
+    <div class="viagem-card" onclick="navegar('screen-detalhe')">
+      <div class="viagem-topo">
+        <div class="viagem-via"><div class="viagem-via-logo" style="background: linear-gradient(135deg, #6366F1, #4F46E5);">RE</div><span>Real Expresso</span></div>
+        <div class="viagem-classe">Leito</div>
+      </div>
+      <div class="viagem-rota">
+        <div class="rota-ponta"><div class="rota-hora">22:30</div><div class="rota-cidade">Goiânia</div></div>
+        <div class="rota-meio"><div style="font-size: 11px;">13h 30min</div><div class="rota-linha"></div><div style="font-size: 10px;">noturno</div></div>
+        <div class="rota-ponta right"><div class="rota-hora">12:00</div><div class="rota-cidade">Rio de Janeiro</div></div>
+      </div>
+      <div class="viagem-rodape">
+        <div class="viagem-poltronas">🪑 8 poltronas livres</div>
+        <div class="viagem-preco">R$ 309<small> /pessoa</small></div>
+      </div>
+    </div>
+    <div class="viagem-card" onclick="navegar('screen-detalhe')">
+      <div class="viagem-topo">
+        <div class="viagem-via"><div class="viagem-via-logo" style="background: linear-gradient(135deg, #DC2626, #B91C1C);">GT</div><span>Gontijo</span></div>
+        <div class="viagem-classe">Semi-Leito</div>
+      </div>
+      <div class="viagem-rota">
+        <div class="rota-ponta"><div class="rota-hora">12:00</div><div class="rota-cidade">Goiânia</div></div>
+        <div class="rota-meio"><div style="font-size: 11px;">14h</div><div class="rota-linha"></div><div style="font-size: 10px;">direto</div></div>
+        <div class="rota-ponta right"><div class="rota-hora">02:00</div><div class="rota-cidade">Rio de Janeiro</div></div>
+      </div>
+      <div class="viagem-rodape">
+        <div class="viagem-poltronas">🪑 25 poltronas livres</div>
+        <div class="viagem-preco">R$ 215<small> /pessoa</small></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETALHE -->
+<div class="screen" id="screen-detalhe">
+  <div class="detalhe-header">
+    <div class="header-row-back">
+      <div class="header-back-btn" onclick="voltar('screen-resultados')">←</div>
+      <div class="header-title-text">Detalhes da viagem</div>
+      <div class="header-back-btn">♡</div>
+    </div>
+  </div>
+  <div class="content" style="padding-bottom: 120px;">
+    <div class="detalhe-card">
+      <div style="display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
+        <div class="viagem-via-logo" style="width: 44px; height: 44px; font-size: 14px;">VC</div>
+        <div>
+          <div style="font-weight: 700; font-size: 17px;">Viação Cometa</div>
+          <div class="viagem-classe" style="display: inline-block; margin-top: 4px;">Convencional</div>
+        </div>
+      </div>
+      <div class="detalhe-linha"><span class="detalhe-rotulo">📅 Data</span><span class="detalhe-valor">Sex, 22 Mai 2026</span></div>
+      <div class="detalhe-linha"><span class="detalhe-rotulo">🚌 Partida</span><span class="detalhe-valor">06:30 · Goiânia, GO</span></div>
+      <div class="detalhe-linha"><span class="detalhe-rotulo">🏁 Chegada</span><span class="detalhe-valor">21:00 · Rio de Janeiro, RJ</span></div>
+      <div class="detalhe-linha"><span class="detalhe-rotulo">⏱️ Duração</span><span class="detalhe-valor">14h 30min</span></div>
+      <div class="detalhe-linha"><span class="detalhe-rotulo">🪑 Poltronas livres</span><span class="detalhe-valor">32 de 46</span></div>
+    </div>
+    <div class="detalhe-card" style="margin-top: 12px;">
+      <div style="font-size: 18px; font-weight: 800; margin-bottom: 4px;">O que está incluso</div>
+      <div class="detalhe-inclui"><span class="detalhe-check">✓</span> Ar-condicionado</div>
+      <div class="detalhe-inclui"><span class="detalhe-check">✓</span> Banheiro a bordo</div>
+      <div class="detalhe-inclui"><span class="detalhe-check">✓</span> Wi-Fi gratuito</div>
+      <div class="detalhe-inclui"><span class="detalhe-check">✓</span> Tomada USB</div>
+      <div class="detalhe-inclui"><span class="detalhe-check">✓</span> Bagageiro</div>
+    </div>
+  </div>
+  <div class="detalhe-rodape">
+    <div>
+      <div class="detalhe-total-label">Total</div>
+      <div class="detalhe-total-valor">R$ 189</div>
+    </div>
+    <button class="btn-continuar" onclick="navegar('screen-checkout')">Continuar</button>
+  </div>
+</div>
+
+<!-- CHECKOUT -->
+<div class="screen" id="screen-checkout">
+  <div class="detalhe-header">
+    <div class="header-row-back">
+      <div class="header-back-btn" onclick="voltar('screen-detalhe')">←</div>
+      <div class="header-title-text">Pagamento</div>
+      <div style="width: 40px;"></div>
+    </div>
+  </div>
+  <div class="content" style="padding-bottom: 120px;">
+    <div class="checkout-resumo">
+      <div class="checkout-resumo-topo">
+        <div class="viagem-via-logo">VC</div>
+        <div style="flex: 1;">
+          <div style="font-weight: 700; font-size: 15px;">Viação Cometa</div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Sex, 22 Mai · 06:30 → 21:00</div>
+        </div>
+      </div>
+      <div class="checkout-rota-mini">
+        <div style="font-size: 13px; font-weight: 600;">Goiânia, GO</div>
+        <div style="color: var(--text-muted);">→</div>
+        <div style="font-size: 13px; font-weight: 600;">Rio de Janeiro, RJ</div>
+      </div>
+    </div>
+
+    <div class="checkout-secao">
+      <div class="checkout-secao-titulo">Forma de pagamento</div>
+      <div class="pagamento-opcao selecionado" onclick="selecionarPagamento(this, 'pix')">
+        <div class="pagamento-radio"></div>
+        <div class="pagamento-icon pix">⚡</div>
+        <div class="pagamento-body">
+          <div class="pagamento-nome">Pix <span class="pagamento-tag-desconto">5% OFF</span></div>
+          <div class="pagamento-desc">Aprovação imediata</div>
+        </div>
+      </div>
+      <div class="pagamento-opcao" onclick="selecionarPagamento(this, 'cartao')">
+        <div class="pagamento-radio"></div>
+        <div class="pagamento-icon">💳</div>
+        <div class="pagamento-body">
+          <div class="pagamento-nome">Cartão de crédito</div>
+          <div class="pagamento-desc">Em até 12x · 3x sem juros</div>
+        </div>
+      </div>
+      <div class="pagamento-opcao" onclick="selecionarPagamento(this, 'boleto')" style="margin-bottom: 0;">
+        <div class="pagamento-radio"></div>
+        <div class="pagamento-icon">📄</div>
+        <div class="pagamento-body">
+          <div class="pagamento-nome">Boleto</div>
+          <div class="pagamento-desc">Compensação em até 3 dias úteis</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="resumo-total">
+      <div class="resumo-linha"><span class="resumo-rotulo">Passagem</span><span class="resumo-valor">R$ 189,00</span></div>
+      <div class="resumo-linha"><span class="resumo-rotulo">Taxa de serviço</span><span class="resumo-valor">Grátis</span></div>
+      <div class="resumo-linha" id="linha-desconto-pix">
+        <span class="resumo-rotulo" style="color: var(--pix);">Desconto Pix (5%)</span>
+        <span class="resumo-valor" style="color: var(--pix);">- R$ 9,45</span>
+      </div>
+      <div class="resumo-linha total"><span class="total-rotulo">Total</span><span class="total-valor" id="total-final">R$ 179,55</span></div>
+    </div>
+  </div>
+  <div class="detalhe-rodape">
+    <button class="btn-continuar" id="btn-pagar" onclick="navegar('screen-pix')">Pagar com Pix</button>
+  </div>
+</div>
+
+<!-- PIX -->
+<div class="screen" id="screen-pix">
+  <div class="detalhe-header">
+    <div class="header-row-back">
+      <div class="header-back-btn" onclick="voltar('screen-checkout')">←</div>
+      <div class="header-title-text">Pagamento Pix</div>
+      <div style="width: 40px;"></div>
+    </div>
+  </div>
+  <div class="content" style="background: #fff;">
+    <div class="pix-tela">
+      <div style="font-size: 22px; font-weight: 800; letter-spacing: -0.02em;">Escaneie o QR Code</div>
+      <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Use o app do seu banco para pagar</div>
+      <div class="pix-qr">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" fill="#fff"/>
+          <g fill="#0A2B5C">
+            <rect x="5" y="5" width="22" height="22"/><rect x="8" y="8" width="16" height="16" fill="#fff"/><rect x="12" y="12" width="8" height="8"/>
+            <rect x="73" y="5" width="22" height="22"/><rect x="76" y="8" width="16" height="16" fill="#fff"/><rect x="80" y="12" width="8" height="8"/>
+            <rect x="5" y="73" width="22" height="22"/><rect x="8" y="76" width="16" height="16" fill="#fff"/><rect x="12" y="80" width="8" height="8"/>
+            <rect x="35" y="10" width="4" height="4"/><rect x="42" y="10" width="4" height="4"/><rect x="55" y="10" width="4" height="4"/><rect x="62" y="10" width="4" height="4"/>
+            <rect x="35" y="17" width="4" height="4"/><rect x="49" y="17" width="4" height="4"/><rect x="62" y="17" width="4" height="4"/>
+            <rect x="42" y="24" width="4" height="4"/><rect x="55" y="24" width="4" height="4"/>
+            <rect x="10" y="35" width="4" height="4"/><rect x="17" y="35" width="4" height="4"/><rect x="35" y="35" width="4" height="4"/><rect x="49" y="35" width="4" height="4"/><rect x="62" y="35" width="4" height="4"/><rect x="76" y="35" width="4" height="4"/><rect x="83" y="35" width="4" height="4"/>
+            <rect x="10" y="42" width="4" height="4"/><rect x="24" y="42" width="4" height="4"/><rect x="42" y="42" width="4" height="4"/><rect x="55" y="42" width="4" height="4"/><rect x="69" y="42" width="4" height="4"/><rect x="83" y="42" width="4" height="4"/>
+            <rect x="17" y="49" width="4" height="4"/><rect x="35" y="49" width="4" height="4"/><rect x="42" y="49" width="4" height="4"/><rect x="62" y="49" width="4" height="4"/><rect x="76" y="49" width="4" height="4"/>
+            <rect x="10" y="56" width="4" height="4"/><rect x="24" y="56" width="4" height="4"/><rect x="49" y="56" width="4" height="4"/><rect x="55" y="56" width="4" height="4"/><rect x="69" y="56" width="4" height="4"/><rect x="83" y="56" width="4" height="4"/>
+            <rect x="17" y="63" width="4" height="4"/><rect x="35" y="63" width="4" height="4"/><rect x="42" y="63" width="4" height="4"/><rect x="62" y="63" width="4" height="4"/><rect x="69" y="63" width="4" height="4"/><rect x="83" y="63" width="4" height="4"/>
+            <rect x="35" y="76" width="4" height="4"/><rect x="49" y="76" width="4" height="4"/><rect x="62" y="76" width="4" height="4"/>
+            <rect x="42" y="83" width="4" height="4"/><rect x="55" y="83" width="4" height="4"/><rect x="76" y="83" width="4" height="4"/><rect x="83" y="83" width="4" height="4"/>
+            <rect x="35" y="90" width="4" height="4"/><rect x="62" y="90" width="4" height="4"/><rect x="69" y="90" width="4" height="4"/>
+          </g>
+        </svg>
+      </div>
+      <div style="font-size: 28px; font-weight: 800; color: var(--navy);">R$ 179,55</div>
+    </div>
+    <div class="pix-timer">Expira em <strong>14:58</strong></div>
+    <div class="pix-codigo">00020126580014BR.GOV.BCB.PIX0136a629534e-7693-4846-b028-f142082d7b075204000053039865802BR5913ViajeBrasil6009GOIANIA62070503***6304E2CA</div>
+    <div class="pix-copiar" onclick="toast('✓ Código Pix copiado!')">📋 Copiar código Pix</div>
+    <div class="pix-instrucoes">
+      <div style="font-size: 16px; font-weight: 800; margin-bottom: 8px;">Como pagar</div>
+      <div class="pix-passo"><div class="pix-num">1</div><div style="font-size: 13px;">Abra o app do seu banco e entre na área Pix</div></div>
+      <div class="pix-passo"><div class="pix-num">2</div><div style="font-size: 13px;">Escolha "Pagar com QR Code" ou "Pix Copia e Cola"</div></div>
+      <div class="pix-passo"><div class="pix-num">3</div><div style="font-size: 13px;">Confirme. Sua passagem chega por e-mail em segundos</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- HOSPEDAGENS -->
+<div class="screen" id="screen-hospedagens" data-tab="hospedagens">
+  <div class="header-hero" style="background-image: linear-gradient(135deg, rgba(10,43,92,0.92), rgba(6,30,68,0.85)), url('https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80');">
+    <div class="header-row">
+      <div class="header-logo"><div class="header-logo-mark">🛏️</div>Hospedagens</div>
+      <div class="header-icons"><div class="header-icon-btn">🔍</div></div>
+    </div>
+    <div class="header-hero-titulo">Onde você vai<br><span class="destaque">descansar?</span></div>
+    <div class="header-hero-sub">Hotéis e pousadas em todo o Brasil</div>
+  </div>
+  <div class="content">
+    <div class="hotel-card">
+      <div class="hotel-img" style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80');">
+        <div class="hotel-fav">♡</div>
+      </div>
+      <div class="hotel-body">
+        <div class="hotel-nome">Hotel Vista Mar Copacabana</div>
+        <div class="hotel-local">📍 Copacabana · Rio de Janeiro, RJ</div>
+        <div class="hotel-rating"><span class="star">★</span><span class="num">4.8</span><span class="count">· 2.341 avaliações</span></div>
+        <div class="hotel-preco-row"><span style="font-size: 12px; color: var(--text-muted);">5 noites · 2 adultos</span><div class="hotel-preco">R$ 1.890<small> total</small></div></div>
+      </div>
+    </div>
+    <div class="hotel-card">
+      <div class="hotel-img" style="background-image: url('https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600&q=80');">
+        <div class="hotel-fav">♡</div>
+      </div>
+      <div class="hotel-body">
+        <div class="hotel-nome">Plaza Boutique Hotel</div>
+        <div class="hotel-local">📍 Centro · São Paulo, SP</div>
+        <div class="hotel-rating"><span class="star">★</span><span class="num">4.6</span><span class="count">· 1.892 avaliações</span></div>
+        <div class="hotel-preco-row"><span style="font-size: 12px; color: var(--text-muted);">3 noites · 2 adultos</span><div class="hotel-preco">R$ 980<small> total</small></div></div>
+      </div>
+    </div>
+    <div class="hotel-card">
+      <div class="hotel-img" style="background-image: url('https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&q=80');">
+        <div class="hotel-fav">♡</div>
+      </div>
+      <div class="hotel-body">
+        <div class="hotel-nome">Pousada Coração da Ilha</div>
+        <div class="hotel-local">📍 Lagoa · Florianópolis, SC</div>
+        <div class="hotel-rating"><span class="star">★</span><span class="num">4.9</span><span class="count">· 956 avaliações</span></div>
+        <div class="hotel-preco-row"><span style="font-size: 12px; color: var(--text-muted);">4 noites · 2 adultos</span><div class="hotel-preco">R$ 1.450<small> total</small></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PACOTES -->
+<div class="screen" id="screen-pacotes" data-tab="pacotes">
+  <div class="header-hero" style="background-image: linear-gradient(135deg, rgba(10,43,92,0.92), rgba(6,30,68,0.85)), url('https://images.unsplash.com/photo-1597950381040-2c40462b8757?w=800&q=80');">
+    <div class="header-row">
+      <div class="header-logo"><div class="header-logo-mark">🎁</div>Pacotes</div>
+      <div class="header-icons"><div class="header-icon-btn">⚡</div></div>
+    </div>
+    <div class="header-hero-titulo">Tudo pronto<br><span class="destaque">numa compra só</span></div>
+    <div class="header-hero-sub">Passagem, hospedagem e passeios juntos</div>
+  </div>
+  <div class="content">
+    <div class="pacote-card">
+      <div class="pacote-img" style="background-image: url('https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=600&q=80');">
+        <div class="pacote-badge-desconto">25% OFF</div>
+        <div class="pacote-titulo-img">Carnaval no Rio</div>
+      </div>
+      <div class="pacote-body">
+        <div class="pacote-meta">
+          <div class="pacote-meta-item">🌙 4 noites</div>
+          <div class="pacote-meta-item">🗺️ 3 passeios</div>
+          <div class="pacote-meta-item">👥 Casal</div>
+        </div>
+        <div class="pacote-inclui">
+          <span class="pacote-tag">🚌 Passagem</span><span class="pacote-tag">🏨 Hotel 4★</span><span class="pacote-tag">🥐 Café</span><span class="pacote-tag">🎭 City tour</span>
+        </div>
+        <div class="pacote-preco-bloco"><span class="pacote-preco-orig">R$ 1.199</span><div class="pacote-preco">R$ 899<small> /pessoa</small></div></div>
+      </div>
+    </div>
+    <div class="pacote-card">
+      <div class="pacote-img" style="background-image: url('https://images.unsplash.com/photo-1554995207-c18c203602cb?w=600&q=80');">
+        <div class="pacote-titulo-img">Pelourinho Histórico</div>
+      </div>
+      <div class="pacote-body">
+        <div class="pacote-meta">
+          <div class="pacote-meta-item">🌙 3 noites</div>
+          <div class="pacote-meta-item">🗺️ 2 passeios</div>
+          <div class="pacote-meta-item">👤 Individual</div>
+        </div>
+        <div class="pacote-inclui">
+          <span class="pacote-tag">🚌 Passagem</span><span class="pacote-tag">🏨 Pousada</span><span class="pacote-tag">🎭 City tour</span>
+        </div>
+        <div class="pacote-preco-bloco"><span></span><div class="pacote-preco">R$ 749<small> /pessoa</small></div></div>
+      </div>
+    </div>
+    <div class="pacote-card" style="margin-bottom: 20px;">
+      <div class="pacote-img" style="background-image: url('https://images.unsplash.com/photo-1597950381040-2c40462b8757?w=600&q=80');">
+        <div class="pacote-badge-desconto">23% OFF</div>
+        <div class="pacote-titulo-img">Inverno em Gramado</div>
+      </div>
+      <div class="pacote-body">
+        <div class="pacote-meta">
+          <div class="pacote-meta-item">🌙 5 noites</div>
+          <div class="pacote-meta-item">🗺️ 3 passeios</div>
+          <div class="pacote-meta-item">👥 Família</div>
+        </div>
+        <div class="pacote-inclui">
+          <span class="pacote-tag">🚌 Passagem</span><span class="pacote-tag">🏔️ Hotel</span><span class="pacote-tag">🍫 Mini Mundo</span><span class="pacote-tag">🍷 Tour vinícolas</span>
+        </div>
+        <div class="pacote-preco-bloco"><span class="pacote-preco-orig">R$ 1.299</span><div class="pacote-preco">R$ 999<small> /pessoa</small></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FRETAMENTO -->
+<div class="screen" id="screen-fretamento" data-tab="fretamento">
+  <div class="header-hero" style="background-image: linear-gradient(135deg, rgba(10,43,92,0.92), rgba(6,30,68,0.85)), url('https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&q=80');">
+    <div class="header-row">
+      <div class="header-logo"><div class="header-logo-mark">👥</div>Fretamento</div>
+      <div class="header-icons"><div class="header-icon-btn">💬</div></div>
+    </div>
+    <div class="header-hero-titulo">Viaje em grupo<br><span class="destaque">com conforto</span></div>
+    <div class="header-hero-sub">Vans, micro-ônibus e ônibus para grupos</div>
+  </div>
+  <div class="content">
+    <div style="padding: 20px 16px 4px;">
+      <div style="font-size: 18px; font-weight: 800;">Escolha o veículo</div>
+    </div>
+    <div class="fret-veiculo" onclick="selecionarVeic(this)">
+      <div class="fret-veiculo-icon">🚐</div>
+      <div class="fret-veiculo-body">
+        <div class="fret-veiculo-nome">Van Executiva</div>
+        <div class="fret-veiculo-cap">Até 15 passageiros</div>
+      </div>
+      <div class="fret-veiculo-preco">R$ 800<small style="font-size: 11px; color: var(--text-muted); font-weight: 500;">/dia</small></div>
+    </div>
+    <div class="fret-veiculo selecionado" onclick="selecionarVeic(this)">
+      <div class="fret-veiculo-icon">🚙</div>
+      <div class="fret-veiculo-body">
+        <div class="fret-veiculo-nome">Micro-ônibus</div>
+        <div class="fret-veiculo-cap">Até 27 passageiros</div>
+      </div>
+      <div class="fret-veiculo-preco">R$ 1.200<small style="font-size: 11px; color: var(--text-muted); font-weight: 500;">/dia</small></div>
+    </div>
+    <div class="fret-veiculo" onclick="selecionarVeic(this)">
+      <div class="fret-veiculo-icon">🚌</div>
+      <div class="fret-veiculo-body">
+        <div class="fret-veiculo-nome">Ônibus completo</div>
+        <div class="fret-veiculo-cap">Até 46 passageiros</div>
+      </div>
+      <div class="fret-veiculo-preco">R$ 1.800<small style="font-size: 11px; color: var(--text-muted); font-weight: 500;">/dia</small></div>
+    </div>
+    <div style="padding: 20px 16px 4px;">
+      <div style="font-size: 18px; font-weight: 800;">Dados da viagem</div>
+    </div>
+    <div class="fret-form">
+      <div class="fret-input-row"><div class="fret-label">Origem</div><input class="fret-input" value="Goiânia, GO"></div>
+      <div class="fret-input-row"><div class="fret-label">Destino</div><input class="fret-input" value="Caldas Novas, GO"></div>
+      <div style="display: flex; gap: 12px;">
+        <div class="fret-input-row" style="flex: 1;"><div class="fret-label">Data</div><input class="fret-input" value="15/06"></div>
+        <div class="fret-input-row" style="flex: 1;"><div class="fret-label">Pessoas</div><input class="fret-input" value="22"></div>
+      </div>
+      <div class="fret-input-row"><div class="fret-label">Observações</div><textarea class="fret-input" placeholder="Excursão da igreja, formatura..."></textarea></div>
+      <button class="search-button" style="margin: 4px 0 24px;" onclick="toast('✅ Solicitação enviada! Retorno em até 24h.')">Solicitar orçamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- PERFIL -->
+<div class="screen" id="screen-perfil" data-tab="perfil">
+  <div class="content" style="padding-bottom: 100px;">
+    <div class="perfil-header">
+      <div class="perfil-avatar">M</div>
+      <div class="perfil-nome">Maria Silva</div>
+      <div class="perfil-email">maria.silva@email.com</div>
+    </div>
+    <div class="perfil-stats">
+      <div class="perfil-stat"><div class="perfil-stat-num">12</div><div class="perfil-stat-label">Viagens</div></div>
+      <div class="perfil-stat"><div class="perfil-stat-num">8</div><div class="perfil-stat-label">Cidades</div></div>
+      <div class="perfil-stat"><div class="perfil-stat-num">450</div><div class="perfil-stat-label">Pontos</div></div>
+    </div>
+    <div class="perfil-menu">
+      <div style="background: #fff; border-radius: 14px; overflow: hidden;">
+        <div class="perfil-item"><div class="perfil-item-icon">🎫</div><div class="perfil-item-label">Minhas viagens</div><div class="perfil-item-arrow">→</div></div>
+        <div class="perfil-item"><div class="perfil-item-icon">♡</div><div class="perfil-item-label">Favoritos</div><div class="perfil-item-arrow">→</div></div>
+        <div class="perfil-item"><div class="perfil-item-icon">💳</div><div class="perfil-item-label">Formas de pagamento</div><div class="perfil-item-arrow">→</div></div>
+        <div class="perfil-item"><div class="perfil-item-icon">🔔</div><div class="perfil-item-label">Notificações</div><div class="perfil-item-arrow">→</div></div>
+        <div class="perfil-item"><div class="perfil-item-icon">❓</div><div class="perfil-item-label">Central de ajuda</div><div class="perfil-item-arrow">→</div></div>
+        <div class="perfil-item" style="border-bottom: none;" onclick="navegar('screen-login')"><div class="perfil-item-icon">🚪</div><div class="perfil-item-label" style="color: var(--red);">Sair</div><div class="perfil-item-arrow">→</div></div>
+      </div>
+      <div style="text-align: center; margin-top: 24px; color: var(--text-subtle); font-size: 12px;">ViajeBrasil · v0.1.0</div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="screen" id="screen-login">
+  <div class="login-top">
+    <div class="header-back-btn" onclick="voltar('screen-perfil')" style="margin-bottom: 20px;">←</div>
+    <div class="login-titulo">Bem-vindo!</div>
+    <div class="login-sub">Entre ou crie sua conta pra continuar</div>
+  </div>
+  <div class="login-form">
+    <div class="login-tabs">
+      <div class="login-tab active">Entrar</div>
+      <div class="login-tab">Criar conta</div>
+    </div>
+    <div class="login-input-row">
+      <div class="fret-label">E-mail ou CPF</div>
+      <input class="fret-input" value="maria.silva@email.com">
+    </div>
+    <div class="login-input-row">
+      <div class="fret-label">Senha</div>
+      <input class="fret-input" type="password" value="senha123">
+    </div>
+    <div class="login-esqueci">Esqueci minha senha</div>
+    <button class="search-button" style="margin: 0; width: 100%;" onclick="toast('✓ Login realizado!'); setTimeout(() => voltar('screen-perfil'), 1000);">Entrar</button>
+    <div class="login-divisor"><span class="login-divisor-texto">ou continue com</span></div>
+    <div class="login-social">
+      <div class="login-social-btn" onclick="toast('Login social...')"><span style="font-size: 18px;">G</span> Google</div>
+      <div class="login-social-btn" onclick="toast('Login social...')"><span style="font-size: 18px;"></span> Apple</div>
+    </div>
+    <div class="login-rodape">Não tem conta? <a>Cadastre-se grátis</a></div>
+  </div>
+</div>
+
+<!-- MODAL CIDADES -->
+<div class="modal-overlay" id="modal-cidades">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-titulo">Selecione a origem</div>
+    <div class="modal-search"><input id="modal-search-input" placeholder="Digite a cidade"></div>
+    <div class="modal-list">
+      <div class="cidade-item" data-nome="Goiânia, GO"><span class="cidade-icon">📍</span><div class="cidade-nome">Goiânia, GO</div></div>
+      <div class="cidade-item" data-nome="São Paulo, SP"><span class="cidade-icon">📍</span><div class="cidade-nome">São Paulo, SP</div></div>
+      <div class="cidade-item" data-nome="Rio de Janeiro, RJ"><span class="cidade-icon">📍</span><div class="cidade-nome">Rio de Janeiro, RJ</div></div>
+      <div class="cidade-item" data-nome="Salvador, BA"><span class="cidade-icon">📍</span><div class="cidade-nome">Salvador, BA</div></div>
+      <div class="cidade-item" data-nome="Florianópolis, SC"><span class="cidade-icon">📍</span><div class="cidade-nome">Florianópolis, SC</div></div>
+      <div class="cidade-item" data-nome="Belo Horizonte, MG"><span class="cidade-icon">📍</span><div class="cidade-nome">Belo Horizonte, MG</div></div>
+      <div class="cidade-item" data-nome="Brasília, DF"><span class="cidade-icon">📍</span><div class="cidade-nome">Brasília, DF</div></div>
+      <div class="cidade-item" data-nome="Curitiba, PR"><span class="cidade-icon">📍</span><div class="cidade-nome">Curitiba, PR</div></div>
+      <div class="cidade-item" data-nome="Fortaleza, CE"><span class="cidade-icon">📍</span><div class="cidade-nome">Fortaleza, CE</div></div>
+      <div class="cidade-item" data-nome="Gramado, RS"><span class="cidade-icon">📍</span><div class="cidade-nome">Gramado, RS</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <div class="tab-item active" data-screen="screen-home">
+    <div class="tab-item-icon">🚌</div><div>Passagens</div>
+  </div>
+  <div class="tab-item" data-screen="screen-hospedagens">
+    <div class="tab-item-icon">🛏️</div><div>Hospedagens</div>
+  </div>
+  <div class="tab-item" data-screen="screen-pacotes">
+    <div class="tab-item-icon">🎁</div><div>Pacotes</div>
+  </div>
+  <div class="tab-item" data-screen="screen-fretamento">
+    <div class="tab-item-icon">👥</div><div>Fretamento</div>
+  </div>
+  <div class="tab-item" data-screen="screen-perfil">
+    <div class="tab-item-icon">👤</div><div>Perfil</div>
+  </div>
+</div>
+
+</div>
+
+<script>
+let cidadeAtual = 'origem';
+
+setTimeout(() => {
+  document.getElementById('splash').classList.add('hidden');
+  setTimeout(() => document.getElementById('splash').style.display = 'none', 500);
+}, 1400);
+
+function navegar(idDestino) {
+  const ativo = document.querySelector('.screen.active');
+  const destino = document.getElementById(idDestino);
+  if (!destino || ativo === destino) return;
+  destino.style.transition = 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)';
+  destino.style.transform = 'translateX(100%)';
+  destino.classList.add('active');
+  requestAnimationFrame(() => {
+    destino.style.transform = 'translateX(0)';
+    if (ativo) ativo.classList.remove('active');
+  });
+}
+
+function voltar(idOrigem) {
+  const ativo = document.querySelector('.screen.active');
+  const origem = document.getElementById(idOrigem);
+  if (!origem) return;
+  origem.classList.add('active');
+  origem.style.transform = 'translateX(0)';
+  if (ativo) {
+    ativo.style.transform = 'translateX(100%)';
+    setTimeout(() => ativo.classList.remove('active'), 320);
+  }
+}
+
+document.querySelectorAll('.tab-item').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const targetId = tab.dataset.screen;
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.screen').forEach(s => {
+      if (s.id === 'splash') return;
+      if (s.id === targetId) {
+        s.style.transition = 'none';
+        s.style.transform = 'translateX(0)';
+        s.classList.add('active');
+      } else {
+        s.style.transition = 'none';
+        s.style.transform = 'translateX(100%)';
+        s.classList.remove('active');
+      }
+    });
+  });
+});
+
+function abrirCidade(tipo) {
+  cidadeAtual = tipo;
+  document.getElementById('modal-titulo').textContent = tipo === 'origem' ? 'Selecione a origem' : 'Selecione o destino';
+  document.getElementById('modal-cidades').classList.add('open');
+}
+function fecharModal() {
+  document.getElementById('modal-cidades').classList.remove('open');
+  document.getElementById('modal-search-input').value = '';
+  filtrarCidades('');
+}
+document.querySelectorAll('.cidade-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.getElementById(cidadeAtual + '-val').textContent = item.dataset.nome;
+    fecharModal();
+  });
+});
+document.getElementById('modal-cidades').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modal-cidades')) fecharModal();
+});
+document.getElementById('modal-search-input').addEventListener('input', (e) => filtrarCidades(e.target.value));
+function filtrarCidades(q) {
+  const norm = q.toLowerCase();
+  document.querySelectorAll('.cidade-item').forEach(item => {
+    item.style.display = item.dataset.nome.toLowerCase().includes(norm) ? '' : 'none';
+  });
+}
+
+function swap() {
+  const o = document.getElementById('origem-val');
+  const d = document.getElementById('destino-val');
+  const tmp = o.textContent;
+  o.textContent = d.textContent;
+  d.textContent = tmp;
+}
+
+function selecionarVeic(el) {
+  document.querySelectorAll('.fret-veiculo').forEach(v => v.classList.remove('selecionado'));
+  el.classList.add('selecionado');
+}
+
+function selecionarPagamento(el, tipo) {
+  document.querySelectorAll('.pagamento-opcao').forEach(v => v.classList.remove('selecionado'));
+  el.classList.add('selecionado');
+  const linhaDesc = document.getElementById('linha-desconto-pix');
+  const total = document.getElementById('total-final');
+  const botao = document.getElementById('btn-pagar');
+  if (tipo === 'pix') {
+    linhaDesc.style.display = '';
+    total.textContent = 'R$ 179,55';
+    botao.textContent = 'Pagar com Pix';
+    botao.onclick = () => navegar('screen-pix');
+  } else if (tipo === 'cartao') {
+    linhaDesc.style.display = 'none';
+    total.textContent = 'R$ 189,00';
+    botao.textContent = 'Pagar com cartão';
+    botao.onclick = () => toast('💳 Adicionando cartão...');
+  } else {
+    linhaDesc.style.display = 'none';
+    total.textContent = 'R$ 189,00';
+    botao.textContent = 'Gerar boleto';
+    botao.onclick = () => toast('📄 Boleto gerado!');
+  }
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+document.querySelectorAll('.filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+  });
+});
+document.querySelectorAll('.tab-modo').forEach(t => {
+  t.addEventListener('click', () => {
+    t.parentElement.querySelectorAll('.tab-modo').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+  });
+});
+document.querySelectorAll('.login-tab').forEach(t => {
+  t.addEventListener('click', () => {
+    t.parentElement.querySelectorAll('.login-tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
