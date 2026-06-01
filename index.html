@@ -1105,7 +1105,7 @@ textarea.fret-input { resize: none; min-height: 80px; }
         </div>
       </div>
 
-      <button class="search-button" onclick="navegar('screen-resultados')">
+      <button class="search-button" onclick="buscarPassagens()">
         🔍 Buscar passagens
       </button>
     </div>
@@ -1626,14 +1626,14 @@ textarea.fret-input { resize: none; min-height: 80px; }
       <div style="font-size: 18px; font-weight: 800;">Dados da viagem</div>
     </div>
     <div class="fret-form">
-      <div class="fret-input-row"><div class="fret-label">Origem</div><input class="fret-input" value="Goiânia, GO"></div>
-      <div class="fret-input-row"><div class="fret-label">Destino</div><input class="fret-input" value="Caldas Novas, GO"></div>
+      <div class="fret-input-row"><div class="fret-label">Origem</div><input id="fret-origem" class="fret-input" value="Goiânia, GO"></div>
+      <div class="fret-input-row"><div class="fret-label">Destino</div><input id="fret-destino" class="fret-input" value="Caldas Novas, GO"></div>
       <div style="display: flex; gap: 12px;">
-        <div class="fret-input-row" style="flex: 1;"><div class="fret-label">Data</div><input class="fret-input" value="15/06"></div>
-        <div class="fret-input-row" style="flex: 1;"><div class="fret-label">Pessoas</div><input class="fret-input" value="22"></div>
+        <div class="fret-input-row" style="flex: 1;"><div class="fret-label">Data</div><input id="fret-data" class="fret-input" value="15/06"></div>
+        <div class="fret-input-row" style="flex: 1;"><div class="fret-label">Pessoas</div><input id="fret-pessoas" class="fret-input" value="22"></div>
       </div>
-      <div class="fret-input-row"><div class="fret-label">Observações</div><textarea class="fret-input" placeholder="Excursão da igreja, formatura..."></textarea></div>
-      <button class="search-button" style="margin: 4px 0 24px;" onclick="toast('✅ Solicitação enviada! Retorno em até 24h.')">Solicitar orçamento</button>
+      <div class="fret-input-row"><div class="fret-label">Observações</div><textarea id="fret-obs" class="fret-input" placeholder="Excursão da igreja, formatura..."></textarea></div>
+      <button class="search-button" style="margin: 4px 0 24px;" onclick="enviarFretamento()">Solicitar orçamento</button>
     </div>
   </div>
 </div>
@@ -1679,14 +1679,14 @@ textarea.fret-input { resize: none; min-height: 80px; }
     </div>
     <div class="login-input-row">
       <div class="fret-label">E-mail ou CPF</div>
-      <input class="fret-input" value="maria.silva@email.com">
+      <input id="login-usuario" class="fret-input" value="maria.silva@email.com">
     </div>
     <div class="login-input-row">
       <div class="fret-label">Senha</div>
-      <input class="fret-input" type="password" value="senha123">
+      <input id="login-senha" class="fret-input" type="password" value="senha123">
     </div>
     <div class="login-esqueci">Esqueci minha senha</div>
-    <button class="search-button" style="margin: 0; width: 100%;" onclick="toast('✓ Login realizado!'); setTimeout(() => voltar('screen-perfil'), 1000);">Entrar</button>
+    <button class="search-button" style="margin: 0; width: 100%;" onclick="fazerLogin()">Entrar</button>
     <div class="login-divisor"><span class="login-divisor-texto">ou continue com</span></div>
     <div class="login-social">
       <div class="login-social-btn" onclick="toast('Login social...')"><span style="font-size: 18px;">G</span> Google</div>
@@ -1741,6 +1741,145 @@ textarea.fret-input { resize: none; min-height: 80px; }
 </div>
 
 <script>
+/* ============================================================================
+ *  CAMADA DE INTEGRAÇÃO COM A API DO SITE  ·  ViajeBrasil
+ *  ----------------------------------------------------------------------------
+ *  >>> BRECHA DE IMPLEMENTAÇÃO DA API <<<
+ *  Quando o programador entregar o backend, basta:
+ *    1. Preencher API_CONFIG.BASE_URL  (ex.: 'https://api.viajebrasil.com.br')
+ *    2. Conferir/ajustar os caminhos em API_CONFIG.ENDPOINTS
+ *    3. (Opcional) Definir API_CONFIG.TOKEN se a API exigir autenticação
+ *
+ *  Enquanto BASE_URL estiver vazio, o app segue funcionando com dados de
+ *  demonstração (MOCK), sem quebrar nada. Cada método de `API` tenta a API
+ *  real primeiro e cai no mock automaticamente em caso de erro/indisponibilidade.
+ *  O objeto MOCK também serve de CONTRATO: a resposta da API deve seguir o
+ *  mesmo formato dos objetos abaixo.
+ * ========================================================================== */
+const API_CONFIG = {
+  BASE_URL: '',            // TODO programador: URL base da API (deixe '' para usar o mock)
+  TOKEN: '',               // TODO programador: token/Bearer, se a API exigir
+  TIMEOUT: 15000,          // tempo limite de cada requisição, em ms
+  ENDPOINTS: {
+    cidades:     '/cidades',              // GET  ?q=
+    passagens:   '/passagens/buscar',     // GET  ?origem=&destino=&data=&passageiros=
+    hospedagens: '/hospedagens/buscar',   // GET  ?cidade=&checkin=&checkout=&hospedes=
+    pacotes:     '/pacotes',              // GET
+    fretamento:  '/fretamento/orcamento', // POST {veiculo, origem, destino, data, pessoas, observacoes}
+    login:       '/auth/login',           // POST {usuario, senha}
+    pagamento:   '/pagamentos',           // POST {viagemId, metodo, valor}
+  },
+};
+
+const apiAtiva = () => API_CONFIG.BASE_URL.trim().length > 0;
+
+/* Cliente HTTP genérico: monta URL, headers, timeout e trata erros. */
+async function apiRequest(path, { method = 'GET', body = null, query = null } = {}) {
+  let url = API_CONFIG.BASE_URL.replace(/\/$/, '') + path;
+  if (query) {
+    const qs = new URLSearchParams(
+      Object.entries(query).filter(([, v]) => v !== undefined && v !== null && v !== '')
+    ).toString();
+    if (qs) url += '?' + qs;
+  }
+  const headers = { 'Accept': 'application/json' };
+  if (body) headers['Content-Type'] = 'application/json';
+  if (API_CONFIG.TOKEN) headers['Authorization'] = 'Bearer ' + API_CONFIG.TOKEN;
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), API_CONFIG.TIMEOUT);
+  try {
+    const resp = await fetch(url, {
+      method, headers, signal: ctrl.signal,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    return await resp.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/* Métodos de alto nível consumidos pelas telas. Chamam a API real quando
+ * configurada; caso contrário (ou em caso de falha) devolvem o mock. */
+const API = {
+  async listarCidades(q = '') {
+    if (apiAtiva()) {
+      try { return await apiRequest(API_CONFIG.ENDPOINTS.cidades, { query: { q } }); }
+      catch (e) { console.warn('[API] listarCidades falhou, usando mock:', e); }
+    }
+    return MOCK.cidades.filter(c => c.nome.toLowerCase().includes(q.toLowerCase()));
+  },
+  async buscarPassagens(params) {
+    if (apiAtiva()) {
+      try { return await apiRequest(API_CONFIG.ENDPOINTS.passagens, { query: params }); }
+      catch (e) { console.warn('[API] buscarPassagens falhou, usando mock:', e); }
+    }
+    return MOCK.passagens;
+  },
+  async buscarHospedagens(params) {
+    if (apiAtiva()) {
+      try { return await apiRequest(API_CONFIG.ENDPOINTS.hospedagens, { query: params }); }
+      catch (e) { console.warn('[API] buscarHospedagens falhou, usando mock:', e); }
+    }
+    return MOCK.hospedagens;
+  },
+  async listarPacotes() {
+    if (apiAtiva()) {
+      try { return await apiRequest(API_CONFIG.ENDPOINTS.pacotes); }
+      catch (e) { console.warn('[API] listarPacotes falhou, usando mock:', e); }
+    }
+    return MOCK.pacotes;
+  },
+  async solicitarFretamento(dados) {
+    if (apiAtiva()) {
+      try { return await apiRequest(API_CONFIG.ENDPOINTS.fretamento, { method: 'POST', body: dados }); }
+      catch (e) { console.warn('[API] solicitarFretamento falhou, usando mock:', e); }
+    }
+    return { ok: true, protocolo: 'DEMO-' + String(Date.now()).slice(-6) };
+  },
+  async login(credenciais) {
+    if (apiAtiva()) {
+      try { return await apiRequest(API_CONFIG.ENDPOINTS.login, { method: 'POST', body: credenciais }); }
+      catch (e) { console.warn('[API] login falhou, usando mock:', e); }
+    }
+    return { ok: true, usuario: { nome: 'Maria Silva', email: credenciais.usuario } };
+  },
+  async criarPagamento(dados) {
+    if (apiAtiva()) {
+      try { return await apiRequest(API_CONFIG.ENDPOINTS.pagamento, { method: 'POST', body: dados }); }
+      catch (e) { console.warn('[API] criarPagamento falhou, usando mock:', e); }
+    }
+    return { ok: true, metodo: dados.metodo };
+  },
+};
+
+/* Dados de demonstração + contrato de formato esperado da API. */
+const MOCK = {
+  cidades: [
+    { nome: 'Goiânia, GO' }, { nome: 'São Paulo, SP' }, { nome: 'Rio de Janeiro, RJ' },
+    { nome: 'Salvador, BA' }, { nome: 'Florianópolis, SC' }, { nome: 'Belo Horizonte, MG' },
+    { nome: 'Brasília, DF' }, { nome: 'Curitiba, PR' }, { nome: 'Fortaleza, CE' },
+    { nome: 'Gramado, RS' },
+  ],
+  passagens: [
+    { viacao: 'Viação Cometa', classe: 'Convencional', saida: '06:30', chegada: '21:00', duracao: '14h 30min', origem: 'Goiânia', destino: 'Rio de Janeiro', poltronas: 32, preco: 189 },
+    { viacao: 'Itapemirim', classe: 'Executivo', saida: '08:00', chegada: '21:45', duracao: '13h 45min', origem: 'Goiânia', destino: 'Rio de Janeiro', poltronas: 18, preco: 229 },
+    { viacao: 'Real Expresso', classe: 'Leito', saida: '22:30', chegada: '12:00', duracao: '13h 30min', origem: 'Goiânia', destino: 'Rio de Janeiro', poltronas: 8, preco: 309 },
+    { viacao: 'Gontijo', classe: 'Semi-Leito', saida: '12:00', chegada: '02:00', duracao: '14h', origem: 'Goiânia', destino: 'Rio de Janeiro', poltronas: 25, preco: 215 },
+  ],
+  hospedagens: [
+    { nome: 'Hotel Vista Mar Copacabana', local: 'Copacabana · Rio de Janeiro, RJ', nota: 4.8, avaliacoes: 2341, preco: 1890 },
+    { nome: 'Plaza Boutique Hotel', local: 'Centro · São Paulo, SP', nota: 4.6, avaliacoes: 1892, preco: 980 },
+    { nome: 'Pousada Coração da Ilha', local: 'Lagoa · Florianópolis, SC', nota: 4.9, avaliacoes: 956, preco: 1450 },
+  ],
+  pacotes: [
+    { titulo: 'Carnaval no Rio', noites: 4, passeios: 3, desconto: 25, precoOrig: 1199, preco: 899 },
+    { titulo: 'Pelourinho Histórico', noites: 3, passeios: 2, desconto: 0, precoOrig: null, preco: 749 },
+    { titulo: 'Inverno em Gramado', noites: 5, passeios: 3, desconto: 23, precoOrig: 1299, preco: 999 },
+  ],
+};
+
 let cidadeAtual = 'origem';
 
 setTimeout(() => {
@@ -1797,22 +1936,43 @@ function abrirCidade(tipo) {
   cidadeAtual = tipo;
   document.getElementById('modal-titulo').textContent = tipo === 'origem' ? 'Selecione a origem' : 'Selecione o destino';
   document.getElementById('modal-cidades').classList.add('open');
+  carregarCidades(''); // quando a API estiver ativa, busca a lista do backend
+}
+
+/* Renderiza a lista do modal a partir da API. Sem API ativa, mantém o HTML estático. */
+async function carregarCidades(filtro = '') {
+  if (!apiAtiva()) return;
+  try {
+    const cidades = await API.listarCidades(filtro);
+    const lista = document.querySelector('#modal-cidades .modal-list');
+    lista.innerHTML = cidades.map(c =>
+      `<div class="cidade-item" data-nome="${c.nome}"><span class="cidade-icon">📍</span><div class="cidade-nome">${c.nome}</div></div>`
+    ).join('');
+    bindCidadeItems();
+  } catch (e) { console.warn('[API] carregarCidades:', e); }
 }
 function fecharModal() {
   document.getElementById('modal-cidades').classList.remove('open');
   document.getElementById('modal-search-input').value = '';
   filtrarCidades('');
 }
-document.querySelectorAll('.cidade-item').forEach(item => {
-  item.addEventListener('click', () => {
-    document.getElementById(cidadeAtual + '-val').textContent = item.dataset.nome;
-    fecharModal();
+function bindCidadeItems() {
+  document.querySelectorAll('.cidade-item').forEach(item => {
+    item.onclick = () => {
+      document.getElementById(cidadeAtual + '-val').textContent = item.dataset.nome;
+      fecharModal();
+    };
   });
-});
+}
+bindCidadeItems();
 document.getElementById('modal-cidades').addEventListener('click', (e) => {
   if (e.target === document.getElementById('modal-cidades')) fecharModal();
 });
-document.getElementById('modal-search-input').addEventListener('input', (e) => filtrarCidades(e.target.value));
+document.getElementById('modal-search-input').addEventListener('input', (e) => {
+  // Com API ativa, busca no backend; sem API, filtra a lista estática localmente.
+  if (apiAtiva()) carregarCidades(e.target.value);
+  else filtrarCidades(e.target.value);
+});
 function filtrarCidades(q) {
   const norm = q.toLowerCase();
   document.querySelectorAll('.cidade-item').forEach(item => {
@@ -1854,6 +2014,52 @@ function selecionarPagamento(el, tipo) {
     total.textContent = 'R$ 189,00';
     botao.textContent = 'Gerar boleto';
     botao.onclick = () => toast('📄 Boleto gerado!');
+  }
+}
+
+/* ===== AÇÕES QUE PASSAM PELA CAMADA DE API ===== */
+
+async function buscarPassagens() {
+  const origem = document.getElementById('origem-val').textContent;
+  const destino = document.getElementById('destino-val').textContent;
+  toast('🔎 Buscando passagens...');
+  try {
+    const passagens = await API.buscarPassagens({ origem, destino });
+    // TODO programador: renderizar `passagens` na tela de resultados (#screen-resultados)
+    console.log('[API] passagens recebidas:', passagens);
+  } catch (e) { console.warn('[API] buscarPassagens:', e); }
+  navegar('screen-resultados');
+}
+
+async function enviarFretamento() {
+  const veicEl = document.querySelector('.fret-veiculo.selecionado .fret-veiculo-nome');
+  const dados = {
+    veiculo: veicEl ? veicEl.textContent : '',
+    origem: document.getElementById('fret-origem').value,
+    destino: document.getElementById('fret-destino').value,
+    data: document.getElementById('fret-data').value,
+    pessoas: document.getElementById('fret-pessoas').value,
+    observacoes: document.getElementById('fret-obs').value,
+  };
+  const resp = await API.solicitarFretamento(dados);
+  if (resp && resp.ok) {
+    const prot = resp.protocolo ? ' (nº ' + resp.protocolo + ')' : '';
+    toast('✅ Solicitação enviada! Retorno em até 24h.' + prot);
+  } else {
+    toast('⚠️ Não foi possível enviar. Tente novamente.');
+  }
+}
+
+async function fazerLogin() {
+  const usuario = document.getElementById('login-usuario').value;
+  const senha = document.getElementById('login-senha').value;
+  const resp = await API.login({ usuario, senha });
+  if (resp && resp.ok) {
+    toast('✓ Login realizado!');
+    // TODO programador: atualizar o perfil com resp.usuario (nome, e-mail, etc.)
+    setTimeout(() => voltar('screen-perfil'), 1000);
+  } else {
+    toast('⚠️ E-mail ou senha inválidos.');
   }
 }
 
