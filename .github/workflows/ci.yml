@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  qualidade:
+    name: Type-check e build web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.10.0
+          cache: npm
+      - run: npm ci
+      - run: npm run type-check
+      - run: npm run build:web
+        env:
+          EXPO_NO_TELEMETRY: '1'
+          CI: '1'
