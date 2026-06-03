@@ -14,6 +14,15 @@ import type {
 const img = (id: string, w = 800) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=70`;
 
+/**
+ * Imagem ilustrativa estável para os destinos da home. As URLs do Unsplash
+ * usadas antes vinham quebrando (404/403); o Lorem Picsum entrega uma foto
+ * determinística por `semente`, sempre disponível. Quando o backend ligar,
+ * o endpoint `/destinos` passa a fornecer a imagem real de cada cidade.
+ */
+const imgDestino = (semente: string, w = 500, h = 600) =>
+  `https://picsum.photos/seed/${semente}/${w}/${h}`;
+
 /** Banners do carrossel da tela inicial (inspirado no app da Decolar). */
 export const banners: BannerOferta[] = [
   {
@@ -51,14 +60,14 @@ export const banners: BannerOferta[] = [
 ];
 
 export const destinos: Destino[] = [
-  { id: 'd1', cidade: 'Rio de Janeiro', uf: 'RJ', precoMin: 189, imagem: img('photo-1483729558449-99ef09a8c325', 500) },
-  { id: 'd2', cidade: 'Salvador', uf: 'BA', precoMin: 159, imagem: img('photo-1591622180420-1b6e4d5b8e0a', 500) },
-  { id: 'd3', cidade: 'Foz do Iguaçu', uf: 'PR', precoMin: 220, imagem: img('photo-1548675232-3bba9bf03f02', 500) },
-  { id: 'd4', cidade: 'Gramado', uf: 'RS', precoMin: 240, imagem: img('photo-1610641818989-c2051b5e2cfd', 500) },
-  { id: 'd5', cidade: 'Bonito', uf: 'MS', precoMin: 310, imagem: img('photo-1516815231560-8f41ec531527', 500) },
-  { id: 'd6', cidade: 'Fortaleza', uf: 'CE', precoMin: 175, imagem: img('photo-1593958812614-2db6a598c71c', 500) },
-  { id: 'd7', cidade: 'Florianópolis', uf: 'SC', precoMin: 199, imagem: img('photo-1559128010-7c1ad6e1b6a5', 500) },
-  { id: 'd8', cidade: 'Manaus', uf: 'AM', precoMin: 280, imagem: img('photo-1591556250140-3a4e1e6b1f6a', 500) },
+  { id: 'd1', cidade: 'Rio de Janeiro', uf: 'RJ', precoMin: 189, imagem: imgDestino('rio-de-janeiro') },
+  { id: 'd2', cidade: 'Salvador', uf: 'BA', precoMin: 159, imagem: imgDestino('salvador-ba') },
+  { id: 'd3', cidade: 'Foz do Iguaçu', uf: 'PR', precoMin: 220, imagem: imgDestino('foz-do-iguacu') },
+  { id: 'd4', cidade: 'Gramado', uf: 'RS', precoMin: 240, imagem: imgDestino('gramado-rs') },
+  { id: 'd5', cidade: 'Bonito', uf: 'MS', precoMin: 310, imagem: imgDestino('bonito-ms') },
+  { id: 'd6', cidade: 'Fortaleza', uf: 'CE', precoMin: 175, imagem: imgDestino('fortaleza-ce') },
+  { id: 'd7', cidade: 'Florianópolis', uf: 'SC', precoMin: 199, imagem: imgDestino('florianopolis-sc') },
+  { id: 'd8', cidade: 'Manaus', uf: 'AM', precoMin: 280, imagem: imgDestino('manaus-am') },
 ];
 
 export const passagensOnibus: PassagemOnibus[] = [

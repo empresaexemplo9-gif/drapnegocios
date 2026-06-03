@@ -37,7 +37,9 @@ export function CartaoDestino({ destino, aoTocar }: { destino: Destino; aoTocar:
 
 const destinoStyle = StyleSheet.create({
   cartao: { width: 150, marginRight: 12 },
-  imagem: { height: 180, justifyContent: 'flex-end' },
+  // backgroundColor garante um cartão estilizado (cidade legível) mesmo que a
+  // imagem demore ou falhe ao carregar — evita caixa branca/quebrada.
+  imagem: { height: 180, justifyContent: 'flex-end', backgroundColor: cores.azulMarinho, borderRadius: raio.lg },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(21,49,94,0.25)',
