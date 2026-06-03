@@ -83,7 +83,8 @@ const pacoteStyle = StyleSheet.create({
     overflow: 'hidden',
     ...sombra,
   },
-  imagem: { height: 130, width: '100%' },
+  // backgroundColor evita caixa branca/quebrada enquanto a imagem carrega ou se falhar.
+  imagem: { height: 130, width: '100%', backgroundColor: cores.azulMarinho },
   corpo: { padding: 12, gap: 6 },
   titulo: { fontSize: 16, fontWeight: '800', color: cores.azulMarinho },
   local: { flexDirection: 'row', alignItems: 'center', gap: 3 },

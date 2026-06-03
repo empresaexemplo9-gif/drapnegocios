@@ -10,15 +10,22 @@ import type {
   SeguroViagem,
 } from '../tipos';
 
-/** Imagens de domínio público (Unsplash) usadas como ilustração no protótipo. */
-const img = (id: string, w = 800) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=70`;
+/**
+ * Imagem ilustrativa estável. As URLs do Unsplash usadas antes vinham
+ * quebrando (404/403); o Lorem Picsum entrega uma foto determinística por
+ * `semente`, sempre disponível. Quando o backend ligar, os endpoints passam
+ * a fornecer a imagem real de cada item.
+ */
+const img = (semente: string, w = 800) =>
+  `https://picsum.photos/seed/${semente}/${w}/${Math.round((w * 2) / 3)}`;
+
+// FOTO REAL E LICENCIADA de um item específico: coloque o arquivo (licença
+// livre p/ uso comercial — Unsplash/Pexels, ou foto própria) em `public/destinos/`
+// e aponte `imagem` para o caminho servido, ex.: '/destinos/cataratas-iguacu.jpg'.
+// Mantém o tipo `string` e funciona no build web (public/ é copiado p/ a raiz do site).
 
 /**
- * Imagem ilustrativa estável para os destinos da home. As URLs do Unsplash
- * usadas antes vinham quebrando (404/403); o Lorem Picsum entrega uma foto
- * determinística por `semente`, sempre disponível. Quando o backend ligar,
- * o endpoint `/destinos` passa a fornecer a imagem real de cada cidade.
+ * Imagem dos destinos da home (formato retrato). Mesma fonte estável do `img`.
  */
 const imgDestino = (semente: string, w = 500, h = 600) =>
   `https://picsum.photos/seed/${semente}/${w}/${h}`;
