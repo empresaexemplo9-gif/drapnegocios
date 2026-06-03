@@ -69,8 +69,8 @@ export const banners: BannerOferta[] = [
 
 export const destinos: Destino[] = [
   { id: 'd1', cidade: 'Rio de Janeiro', uf: 'RJ', precoMin: 189, imagem: imgDestino('rio-de-janeiro') },
-  { id: 'd2', cidade: 'Salvador', uf: 'BA', precoMin: 159, imagem: imgCommons('Farol_da_Barra_Salvador.JPG', 600) },
-  { id: 'd3', cidade: 'Foz do Iguaçu', uf: 'PR', precoMin: 220, imagem: imgCommons('Iguazu_Falls_with_Rainbow.JPG', 600) },
+  { id: 'd2', cidade: 'Salvador', uf: 'BA', precoMin: 159, imagem: imgDestino('salvador-ba') },
+  { id: 'd3', cidade: 'Foz do Iguaçu', uf: 'PR', precoMin: 220, imagem: imgDestino('foz-do-iguacu') },
   { id: 'd4', cidade: 'Gramado', uf: 'RS', precoMin: 240, imagem: imgDestino('gramado-rs') },
   { id: 'd5', cidade: 'Bonito', uf: 'MS', precoMin: 310, imagem: imgDestino('bonito-ms') },
   { id: 'd6', cidade: 'Fortaleza', uf: 'CE', precoMin: 175, imagem: imgDestino('fortaleza-ce') },

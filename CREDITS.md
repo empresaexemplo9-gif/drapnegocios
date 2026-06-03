@@ -6,8 +6,8 @@ aqui e linkamos a página de cada arquivo, onde constam autor e licença exatos.
 
 | Uso na home | Arquivo (Wikimedia Commons) | Página (autor + licença) |
 |---|---|---|
-| Salvador (destino + pacote "Salvador Histórica") | `Farol_da_Barra_Salvador.JPG` | https://commons.wikimedia.org/wiki/File:Farol_da_Barra_Salvador.JPG |
-| Foz do Iguaçu (destino + pacote "Cataratas do Iguaçu") | `Iguazu_Falls_with_Rainbow.JPG` | https://commons.wikimedia.org/wiki/File:Iguazu_Falls_with_Rainbow.JPG |
+| Pacote "Salvador Histórica" | `Farol_da_Barra_Salvador.JPG` | https://commons.wikimedia.org/wiki/File:Farol_da_Barra_Salvador.JPG |
+| Pacote "Cataratas do Iguaçu" | `Iguazu_Falls_with_Rainbow.JPG` | https://commons.wikimedia.org/wiki/File:Iguazu_Falls_with_Rainbow.JPG |
 
 As demais ilustrações da home/resultados usam o **Lorem Picsum** (fotos
 genéricas estáveis), sem necessidade de atribuição.
