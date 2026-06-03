@@ -27,7 +27,6 @@ export default function LayoutRaiz() {
               }}
             >
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="admin" options={{ headerShown: false }} />
               <Stack.Screen name="resultados" options={{ title: t.resultados.titulo }} />
               <Stack.Screen name="detalhe" options={{ title: '' }} />
               <Stack.Screen

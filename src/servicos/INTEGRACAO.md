@@ -9,9 +9,8 @@ o **modo `api`** é uma troca mínima.
 
 `src/servicos/config.ts` decide automaticamente:
 
-1. `supabase` — se `EXPO_PUBLIC_SUPABASE_URL` + `ANON_KEY` estiverem definidos.
-2. `api` — se `EXPO_PUBLIC_API_URL` estiver definido.
-3. `mock` — padrão (sem backend).
+1. `api` — se `EXPO_PUBLIC_API_URL` estiver definido.
+2. `mock` — padrão (sem backend).
 
 Para ligar o backend do site, basta definir a **base** da API (pasta
 `apibuson/`), sem barra no fim:

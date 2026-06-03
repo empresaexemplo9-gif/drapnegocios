@@ -23,11 +23,9 @@ import type {
   PacoteTurismo,
   ProdutoViagem,
 } from '../tipos';
-import { aplicarPrecos } from '../admin/produtos';
 import { API_CONFIG } from './config';
 import { requisitar } from './cliente';
 import { ENDPOINTS } from './endpoints';
-import { overridesPreco } from './admin';
 
 export interface FiltroBusca {
   origem?: string;
@@ -63,16 +61,12 @@ export async function buscar(
     if (filtro.destino) query.set('destino', filtro.destino);
     return requisitar<ProdutoViagem[]>(`${ENDPOINTS.catalogo.busca}?${query.toString()}`);
   }
-  const overrides = await overridesPreco();
-  return aplicarPrecos(buscarPorCategoria(categoria, filtro), overrides);
+  return buscarPorCategoria(categoria, filtro);
 }
 
 export async function obterProduto(id: string): Promise<ProdutoViagem | null> {
   // Sem endpoint de detalhe no apibuson: resolve pelo mock local.
   if (API_CONFIG.fonte === 'api' && ENDPOINTS.catalogo.produto)
     return requisitar<ProdutoViagem>(ENDPOINTS.catalogo.produto(id));
-  const produto = buscarProduto(id);
-  if (!produto) return null;
-  const overrides = await overridesPreco();
-  return aplicarPrecos([produto], overrides)[0] ?? produto;
+  return buscarProduto(id) ?? null;
 }

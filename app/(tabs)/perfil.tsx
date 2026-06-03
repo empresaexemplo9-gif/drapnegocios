@@ -14,7 +14,7 @@ type Icone = keyof typeof Ionicons.glyphMap;
 export default function Perfil() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { usuario, autenticado, ehAdmin, sair } = useAutenticacao();
+  const { usuario, autenticado, sair } = useAutenticacao();
 
   return (
     <ScrollView style={styles.tela} contentContainerStyle={{ paddingBottom: 40 }}>
@@ -41,16 +41,6 @@ export default function Perfil() {
         )}
       </View>
 
-      {ehAdmin && (
-        <Grupo>
-          <Linha
-            icone="construct-outline"
-            rotulo={t.admin.painel}
-            aoTocar={() => router.push('/admin')}
-          />
-        </Grupo>
-      )}
-
       <Grupo>
         <Linha icone="airplane-outline" rotulo={t.perfil.minhasViagens} aoTocar={() => router.push('/reservas')} />
         <Linha icone="card-outline" rotulo={t.perfil.pagamentos} />
@@ -65,13 +55,6 @@ export default function Perfil() {
           rotulo={t.perfil.ajuda}
           aoTocar={() => Linking.openURL(empresa.whatsappUrl)}
         />
-        {!ehAdmin && (
-          <Linha
-            icone="shield-checkmark-outline"
-            rotulo={t.admin.acesso}
-            aoTocar={() => router.push('/admin/login')}
-          />
-        )}
       </Grupo>
 
       {autenticado && (

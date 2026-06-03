@@ -63,11 +63,11 @@ em português, e **toda string de UI passa pelo i18n** (`src/i18n`).
 
 ## Observações
 
-- Os dados do catálogo são **mockados** (`src/dados`). **Backend opcional via
-  Supabase** (login real de admin + preços e parceiros compartilhados): veja
-  `supabase/README.md`. Sem as variáveis `EXPO_PUBLIC_SUPABASE_*`, o app roda
-  em modo mock. A integração de catálogo completo e pagamento (ex.: PassHub e
-  gateway) são os próximos passos.
+- Os dados do catálogo são **mockados** (`src/dados`). O **backend opcional** se
+  liga definindo `EXPO_PUBLIC_API_URL` (modo `api`, API do site oficial —
+  pasta `apibuson/`); sem isso o app roda em modo mock. Veja
+  `src/servicos/INTEGRACAO.md`. A integração de catálogo completo e pagamento
+  (ex.: PassHub e gateway) são os próximos passos.
 - As imagens ilustrativas vêm do Unsplash (exigem rede para carregar).
 - A logo oficial (`assets/logo.png`) é a base da identidade. Dois scripts sem
   dependências externas processam a imagem:

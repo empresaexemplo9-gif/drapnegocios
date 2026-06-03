@@ -6,13 +6,11 @@
  *
  * Quando a API for liberada, ajuste os caminhos em `endpoints.ts`.
  */
-import type { ItemReserva } from '../tipos';
-import { validarAdmin, type Papel } from '../admin/credenciais';
+import type { ItemReserva, Papel } from '../tipos';
 import { API_CONFIG } from './config';
 import { requisitar } from './cliente';
 import { ENDPOINTS } from './endpoints';
 import { definirToken } from './sessao';
-import { clienteSupabase } from './supabase';
 
 export type FormaPagamento = 'pix' | 'cartao' | 'boleto';
 
@@ -64,21 +62,6 @@ export interface SessaoUsuario {
 
 /** Autentica por e-mail/senha. */
 export async function autenticar(email: string, senha: string): Promise<SessaoUsuario> {
-  if (API_CONFIG.fonte === 'supabase') {
-    const sb = clienteSupabase();
-    const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
-    if (error || !data.user) throw new Error('Credenciais inválidas');
-    const { data: perfil } = await sb
-      .from('perfis')
-      .select('papel, nome')
-      .eq('id', data.user.id)
-      .single();
-    const papel: Papel = perfil?.papel === 'admin' ? 'admin' : 'cliente';
-    const nome = (perfil?.nome as string | undefined) ?? email.split('@')[0] ?? 'Viajante';
-    const token = data.session?.access_token ?? '';
-    await definirToken(token || null);
-    return { token, usuario: { nome, email, papel } };
-  }
   if (API_CONFIG.fonte === 'api') {
     const sessao = await requisitar<SessaoUsuario>(ENDPOINTS.auth.login, {
       method: 'POST',
@@ -87,8 +70,8 @@ export async function autenticar(email: string, senha: string): Promise<SessaoUs
     await definirToken(sessao.token || null);
     return sessao;
   }
-  // Mock: define o papel pela credencial de administrador.
+  // Mock: autentica como cliente (o papel real é definido pelo backend no modo `api`).
   const nome = email.split('@')[0] ?? 'Viajante';
-  const papel: Papel = validarAdmin(email, senha) ? 'admin' : 'cliente';
+  const papel: Papel = 'cliente';
   return { token: 'mock-token', usuario: { nome, email, papel } };
 }
