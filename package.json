@@ -4,6 +4,9 @@
   "private": true,
   "description": "ViajeBrasil — app mobile de venda de passagens (ônibus e aéreas), hospedagem e turismo",
   "main": "expo-router/entry",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
