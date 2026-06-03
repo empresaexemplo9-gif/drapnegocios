@@ -7,9 +7,10 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { cores, raio, alturaBarraAbas } from '../../src/tema';
+import { cores, raio } from '../../src/tema';
 import { t } from '../../src/i18n';
 import {
   CarrosselOfertas,
@@ -26,6 +27,9 @@ import type { Categoria } from '../../src/tipos';
 export default function Inicio() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  // Altura real da barra de abas (inclui área segura e o que o web aplicar);
+  // mais confiável que a constante para o feed não ficar cortado no fim.
+  const alturaBarra = useBottomTabBarHeight();
 
   const { dados: banners = [] } = useAsync(listarOfertas, []);
   const { dados: destinos = [] } = useAsync(listarDestinos, []);
@@ -37,9 +41,9 @@ export default function Inicio() {
   return (
     <ScrollView
       style={styles.tela}
-      // A barra de abas flutua sobre o conteúdo; sem reservar essa altura
-      // (+ área segura inferior) o fim do feed fica cortado.
-      contentContainerStyle={{ paddingBottom: insets.bottom + alturaBarraAbas + 24 }}
+      // A barra de abas flutua sobre o conteúdo; reservar a altura real dela
+      // evita que o fim do feed (selo de compra segura) fique cortado.
+      contentContainerStyle={{ paddingBottom: alturaBarra + 24 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Cabeçalho */}
