@@ -19,10 +19,11 @@ import type {
 const img = (semente: string, w = 800) =>
   `https://picsum.photos/seed/${semente}/${w}/${Math.round((w * 2) / 3)}`;
 
-// FOTO REAL E LICENCIADA de um item específico: coloque o arquivo (licença
-// livre p/ uso comercial — Unsplash/Pexels, ou foto própria) em `public/destinos/`
-// e aponte `imagem` para o caminho servido, ex.: '/destinos/cataratas-iguacu.jpg'.
-// Mantém o tipo `string` e funciona no build web (public/ é copiado p/ a raiz do site).
+// FOTO REAL com licença livre, hospedada no Wikimedia Commons (uso comercial
+// permitido — o Commons só aceita mídia livre; atribuição em CREDITS.md).
+// URL estável via Special:FilePath; o navegador do usuário carrega a imagem.
+const imgCommons = (arquivo: string, w = 1000) =>
+  `https://commons.wikimedia.org/wiki/Special:FilePath/${arquivo}?width=${w}`;
 
 /**
  * Imagem dos destinos da home (formato retrato). Mesma fonte estável do `img`.
@@ -68,8 +69,8 @@ export const banners: BannerOferta[] = [
 
 export const destinos: Destino[] = [
   { id: 'd1', cidade: 'Rio de Janeiro', uf: 'RJ', precoMin: 189, imagem: imgDestino('rio-de-janeiro') },
-  { id: 'd2', cidade: 'Salvador', uf: 'BA', precoMin: 159, imagem: imgDestino('salvador-ba') },
-  { id: 'd3', cidade: 'Foz do Iguaçu', uf: 'PR', precoMin: 220, imagem: imgDestino('foz-do-iguacu') },
+  { id: 'd2', cidade: 'Salvador', uf: 'BA', precoMin: 159, imagem: imgCommons('Farol_da_Barra_Salvador.JPG', 600) },
+  { id: 'd3', cidade: 'Foz do Iguaçu', uf: 'PR', precoMin: 220, imagem: imgCommons('Iguazu_Falls_with_Rainbow.JPG', 600) },
   { id: 'd4', cidade: 'Gramado', uf: 'RS', precoMin: 240, imagem: imgDestino('gramado-rs') },
   { id: 'd5', cidade: 'Bonito', uf: 'MS', precoMin: 310, imagem: imgDestino('bonito-ms') },
   { id: 'd6', cidade: 'Fortaleza', uf: 'CE', precoMin: 175, imagem: imgDestino('fortaleza-ce') },
@@ -120,9 +121,9 @@ export const hospedagens: Hospedagem[] = [
 ];
 
 export const pacotes: PacoteTurismo[] = [
-  { id: 'p1', categoria: 'turismo', titulo: 'Salvador Histórica', destino: 'Salvador', uf: 'BA', dias: 5, inclui: ['Aéreo ida e volta', '4 noites de hotel', 'City tour no Pelourinho', 'Café da manhã'], avaliacao: 9.2, totalAvaliacoes: 430, preco: 1890, imagem: img('photo-1591622180420-1b6e4d5b8e0a'), descricao: 'Pacote completo para conhecer o centro histórico, praias e a culinária baiana.' },
+  { id: 'p1', categoria: 'turismo', titulo: 'Salvador Histórica', destino: 'Salvador', uf: 'BA', dias: 5, inclui: ['Aéreo ida e volta', '4 noites de hotel', 'City tour no Pelourinho', 'Café da manhã'], avaliacao: 9.2, totalAvaliacoes: 430, preco: 1890, imagem: imgCommons('Farol_da_Barra_Salvador.JPG'), descricao: 'Pacote completo para conhecer o centro histórico, praias e a culinária baiana.' },
   { id: 'p2', categoria: 'turismo', titulo: 'Bonito Ecoturismo', destino: 'Bonito', uf: 'MS', dias: 4, inclui: ['Aéreo + traslados', '3 noites de pousada', 'Flutuação no Rio da Prata', 'Gruta do Lago Azul'], avaliacao: 9.6, totalAvaliacoes: 310, preco: 2450, imagem: img('photo-1516815231560-8f41ec531527'), descricao: 'Águas cristalinas, grutas e trilhas no paraíso do ecoturismo brasileiro.' },
-  { id: 'p3', categoria: 'turismo', titulo: 'Cataratas do Iguaçu', destino: 'Foz do Iguaçu', uf: 'PR', dias: 3, inclui: ['Aéreo ida e volta', '2 noites de hotel', 'Parque das Cataratas', 'Parque das Aves'], avaliacao: 9.3, totalAvaliacoes: 720, preco: 1390, imagem: img('photo-1548675232-3bba9bf03f02'), descricao: 'Uma das sete maravilhas da natureza em um pacote curto e inesquecível.' },
+  { id: 'p3', categoria: 'turismo', titulo: 'Cataratas do Iguaçu', destino: 'Foz do Iguaçu', uf: 'PR', dias: 3, inclui: ['Aéreo ida e volta', '2 noites de hotel', 'Parque das Cataratas', 'Parque das Aves'], avaliacao: 9.3, totalAvaliacoes: 720, preco: 1390, imagem: imgCommons('Iguazu_Falls_with_Rainbow.JPG'), descricao: 'Uma das sete maravilhas da natureza em um pacote curto e inesquecível.' },
   { id: 'p4', categoria: 'turismo', titulo: 'Natal & Praias', destino: 'Natal', uf: 'RN', dias: 6, inclui: ['Aéreo ida e volta', '5 noites de resort', 'Passeio de buggy', 'All inclusive'], avaliacao: 9.0, totalAvaliacoes: 560, preco: 2990, imagem: img('photo-1559825481-12a05cc00344'), descricao: 'Dunas, praias e sol o ano inteiro na capital potiguar.' },
 ];
 
