@@ -10,14 +10,9 @@ import type {
   SeguroViagem,
 } from '../tipos';
 
-/**
- * Imagem ilustrativa estável. As URLs do Unsplash usadas antes vinham
- * quebrando (404/403); o Lorem Picsum entrega uma foto determinística por
- * `semente`, sempre disponível. Quando o backend ligar, os endpoints passam
- * a fornecer a imagem real de cada item.
- */
-const img = (semente: string, w = 800) =>
-  `https://picsum.photos/seed/${semente}/${w}/${Math.round((w * 2) / 3)}`;
+/** Imagens ilustrativas (Unsplash) — fotos reais usadas na home e nos resultados. */
+const img = (id: string, w = 800) =>
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=70`;
 
 // FOTO REAL com licença livre, hospedada no Wikimedia Commons (uso comercial
 // permitido — o Commons só aceita mídia livre; atribuição em CREDITS.md).
@@ -26,7 +21,7 @@ const imgCommons = (arquivo: string, w = 1000) =>
   `https://commons.wikimedia.org/wiki/Special:FilePath/${arquivo}?width=${w}`;
 
 /**
- * Imagem dos destinos da home (formato retrato). Mesma fonte estável do `img`.
+ * Imagem dos destinos da home (formato retrato), via Lorem Picsum por cidade.
  */
 const imgDestino = (semente: string, w = 500, h = 600) =>
   `https://picsum.photos/seed/${semente}/${w}/${h}`;
