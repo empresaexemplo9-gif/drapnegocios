@@ -12,6 +12,10 @@ export const espaco = {
   xxl: 32,
 } as const;
 
+/** Altura da barra de abas inferior — fonte única usada pelo layout das abas
+ * e pelo padding do conteúdo das telas, para não dessincronizar. */
+export const alturaBarraAbas = 64;
+
 /** Raios de borda. */
 export const raio = {
   sm: 8,

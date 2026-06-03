@@ -31,7 +31,7 @@ export interface Comprovante {
 /** Cria a reserva a partir dos itens do carrinho. */
 export async function criarReserva(itens: ItemReserva[]): Promise<{ reservaId: string }> {
   if (API_CONFIG.fonte === 'api') {
-    return requisitar<{ reservaId: string }>(ENDPOINTS.pedidos.reservas, {
+    return requisitar<{ reservaId: string }>(ENDPOINTS.pedidos.criarReserva, {
       method: 'POST',
       body: JSON.stringify({ itens }),
     });
@@ -47,7 +47,7 @@ export async function processarPagamento(args: {
   viajante?: Partial<DadosViajante>;
 }): Promise<Comprovante> {
   if (API_CONFIG.fonte === 'api') {
-    return requisitar<Comprovante>(ENDPOINTS.pedidos.pagamentos, {
+    return requisitar<Comprovante>(ENDPOINTS.pedidos.confirmar, {
       method: 'POST',
       body: JSON.stringify(args),
     });

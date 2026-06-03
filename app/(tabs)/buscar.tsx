@@ -20,7 +20,7 @@ export default function Buscar() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ categoria?: Categoria }>();
 
-  const [categoria, setCategoria] = useState<Categoria>(params.categoria ?? 'aereo');
+  const [categoria, setCategoria] = useState<Categoria>(params.categoria ?? 'onibus');
   const [origem, setOrigem] = useState('');
   const [destino, setDestino] = useState('');
   const [somenteIda, setSomenteIda] = useState(false);

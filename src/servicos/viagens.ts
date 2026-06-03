@@ -35,17 +35,21 @@ export interface FiltroBusca {
 }
 
 export async function listarOfertas(): Promise<BannerOferta[]> {
-  if (API_CONFIG.fonte === 'api') return requisitar<BannerOferta[]>(ENDPOINTS.catalogo.ofertas);
+  // Sem endpoint de catálogo no apibuson: cai em mock mesmo no modo `api`.
+  if (API_CONFIG.fonte === 'api' && ENDPOINTS.catalogo.ofertas)
+    return requisitar<BannerOferta[]>(ENDPOINTS.catalogo.ofertas);
   return banners;
 }
 
 export async function listarDestinos(): Promise<Destino[]> {
-  if (API_CONFIG.fonte === 'api') return requisitar<Destino[]>(ENDPOINTS.catalogo.destinos);
+  if (API_CONFIG.fonte === 'api' && ENDPOINTS.catalogo.destinos)
+    return requisitar<Destino[]>(ENDPOINTS.catalogo.destinos);
   return destinos;
 }
 
 export async function listarPacotes(): Promise<PacoteTurismo[]> {
-  if (API_CONFIG.fonte === 'api') return requisitar<PacoteTurismo[]>(ENDPOINTS.catalogo.pacotes);
+  if (API_CONFIG.fonte === 'api' && ENDPOINTS.catalogo.pacotes)
+    return requisitar<PacoteTurismo[]>(ENDPOINTS.catalogo.pacotes);
   return pacotes;
 }
 
@@ -64,7 +68,9 @@ export async function buscar(
 }
 
 export async function obterProduto(id: string): Promise<ProdutoViagem | null> {
-  if (API_CONFIG.fonte === 'api') return requisitar<ProdutoViagem>(ENDPOINTS.catalogo.produto(id));
+  // Sem endpoint de detalhe no apibuson: resolve pelo mock local.
+  if (API_CONFIG.fonte === 'api' && ENDPOINTS.catalogo.produto)
+    return requisitar<ProdutoViagem>(ENDPOINTS.catalogo.produto(id));
   const produto = buscarProduto(id);
   if (!produto) return null;
   const overrides = await overridesPreco();

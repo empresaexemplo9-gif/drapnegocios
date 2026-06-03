@@ -9,7 +9,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { cores, raio } from '../../src/tema';
+import { cores, raio, alturaBarraAbas } from '../../src/tema';
 import { t } from '../../src/i18n';
 import {
   CarrosselOfertas,
@@ -37,9 +37,9 @@ export default function Inicio() {
   return (
     <ScrollView
       style={styles.tela}
-      // A barra de abas (64px) flutua sobre o conteúdo; sem reservar esse
-      // espaço (+ área segura inferior) o fim do feed fica cortado.
-      contentContainerStyle={{ paddingBottom: insets.bottom + 64 + 24 }}
+      // A barra de abas flutua sobre o conteúdo; sem reservar essa altura
+      // (+ área segura inferior) o fim do feed fica cortado.
+      contentContainerStyle={{ paddingBottom: insets.bottom + alturaBarraAbas + 24 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Cabeçalho */}

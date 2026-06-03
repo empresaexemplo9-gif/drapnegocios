@@ -2,7 +2,7 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Text, StyleSheet } from 'react-native';
-import { cores } from '../../src/tema';
+import { cores, alturaBarraAbas } from '../../src/tema';
 import { t } from '../../src/i18n';
 import { useCarrinho } from '../../src/contextos/CarrinhoContext';
 
@@ -20,7 +20,7 @@ export default function LayoutAbas() {
         tabBarStyle: {
           backgroundColor: cores.superficie,
           borderTopColor: cores.borda,
-          height: 64,
+          height: alturaBarraAbas,
           paddingBottom: 8,
           paddingTop: 8,
         },
