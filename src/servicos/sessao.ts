@@ -7,8 +7,13 @@
  * este módulo já cuida de guardar, anexar e limpar — nenhuma tela muda.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TENANT } from './config';
 
-const CHAVE = '@viajebrasil/token';
+/**
+ * Chave de armazenamento namespaced por tenant: garante que sessões/tokens de
+ * tenants diferentes nunca se misturem no mesmo dispositivo (login isolado).
+ */
+const CHAVE = `@viajebrasil/${TENANT.id}/token`;
 
 let tokenMemoria: string | null = null;
 

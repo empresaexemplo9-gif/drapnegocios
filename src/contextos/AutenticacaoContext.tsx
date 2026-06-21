@@ -9,6 +9,7 @@ import React, {
 
 import type { Papel } from '../tipos';
 import { carregarTokenPersistido, definirToken } from '../servicos/sessao';
+import { TENANT } from '../servicos/config';
 
 export type { Papel };
 
@@ -16,12 +17,16 @@ interface Usuario {
   nome: string;
   email: string;
   papel: Papel;
+  /** Tenant ao qual o login pertence — base do isolamento multi-tenant. */
+  tenantId: string;
 }
 
 interface AutenticacaoContextValor {
   usuario: Usuario | null;
   autenticado: boolean;
   ehAdmin: boolean;
+  /** Tenant corrente do app (isolamento de dados e sessão). */
+  tenantId: string;
   entrar: (email: string, papel?: Papel) => void;
   sair: () => void;
 }
@@ -38,7 +43,7 @@ export function AutenticacaoProvider({ children }: { children: React.ReactNode }
 
   const entrar = useCallback((email: string, papel: Papel = 'cliente') => {
     const nome = email.split('@')[0] ?? 'Viajante';
-    setUsuario({ nome, email, papel });
+    setUsuario({ nome, email, papel, tenantId: TENANT.id });
   }, []);
 
   const sair = useCallback(() => {
@@ -51,6 +56,7 @@ export function AutenticacaoProvider({ children }: { children: React.ReactNode }
       usuario,
       autenticado: usuario !== null,
       ehAdmin: usuario?.papel === 'admin',
+      tenantId: TENANT.id,
       entrar,
       sair,
     }),

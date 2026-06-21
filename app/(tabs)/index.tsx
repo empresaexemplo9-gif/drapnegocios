@@ -14,7 +14,7 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { cores, raio, sombra } from '../../src/tema';
 import { t } from '../../src/i18n';
-import { LogoMarca } from '../../src/componentes';
+import { LogoMarca, ChatbotAereo } from '../../src/componentes';
 import { abrirWhiteLabel } from '../../src/servicos';
 
 /** Roxo do card "Corporativo" (só nesta vitrine, fora da paleta base). */
@@ -62,6 +62,8 @@ export default function Inicio() {
   const insets = useSafeAreaInsets();
   const alturaBarra = useBottomTabBarHeight();
   const [email, setEmail] = useState('');
+  // Chatbot de Passagens Aéreas: atendimento dentro do próprio app.
+  const [chatAereoAberto, setChatAereoAberto] = useState(false);
 
   return (
     <View style={styles.tela}>
@@ -111,7 +113,13 @@ export default function Inicio() {
                 key={c.chave}
                 style={[styles.card, c.selecionado && { borderColor: cores.verde, borderWidth: 2 }, c.emBreve && { opacity: 0.85 }]}
                 disabled={c.emBreve}
-                onPress={c.chave === 'onibus' ? () => abrirWhiteLabel('onibus') : undefined}
+                onPress={
+                  c.chave === 'onibus'
+                    ? () => abrirWhiteLabel('onibus')
+                    : c.chave === 'aereo'
+                      ? () => setChatAereoAberto(true)
+                      : undefined
+                }
               >
                 <View style={styles.cardTopo}>
                   <Text style={styles.cardEmoji}>{c.emoji}</Text>
@@ -285,6 +293,9 @@ export default function Inicio() {
           <Text style={styles.rodapeCopy}>{t.vitrine.copyright}</Text>
         </View>
       </ScrollView>
+
+      {/* Atendimento de Passagens Aéreas — chatbot dentro do app. */}
+      <ChatbotAereo visivel={chatAereoAberto} aoFechar={() => setChatAereoAberto(false)} />
     </View>
   );
 }

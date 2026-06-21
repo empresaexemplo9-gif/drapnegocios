@@ -76,6 +76,41 @@ export const ptBR = {
     termos: 'Termos de Uso',
     copyright: '© 2026 ViajeBrasil. Todos os direitos reservados.',
   },
+  chatAereo: {
+    abrir: 'Falar com um consultor',
+    titulo: 'Passagens Aéreas',
+    subtitulo: 'Atendimento ViajeBrasil',
+    online: 'online agora',
+    fechar: 'Fechar',
+    digitando: 'Digitando…',
+    saudacao:
+      'Olá! 👋 Sou o assistente virtual da ViajeBrasil. Vou reunir alguns dados da sua viagem aérea para já adiantar o seu atendimento. Leva menos de 1 minuto.',
+    perguntaPassageiros: 'Para quantos passageiros é a viagem? (1 a 9)',
+    perguntaNomes:
+      'Qual o nome completo do(s) passageiro(s)? Se for mais de um, separe por vírgula.',
+    perguntaDataIda: 'Qual a data de ida? (ex.: 20/07/2026)',
+    perguntaDataVolta: 'E a data de volta? (ex.: 27/07/2026)',
+    somenteIda: 'Somente ida',
+    perguntaClasse: 'Por fim, qual a sua preferência de classe?',
+    classes: ['Econômica', 'Executiva', 'Primeira Classe', 'Sem preferência'],
+    resumoTitulo: 'Perfeito! Registrei os seguintes dados da sua viagem:',
+    resumoPassageiros: (n: number) =>
+      `• Passageiros: ${n} ${n === 1 ? 'pessoa' : 'pessoas'}`,
+    resumoNomes: (nomes: string) => `• Nome(s): ${nomes}`,
+    resumoIda: (d: string) => `• Ida: ${d}`,
+    resumoVolta: (d: string) => `• Volta: ${d}`,
+    resumoClasse: (c: string) => `• Classe: ${c}`,
+    direcionando:
+      'Vou te direcionar para um consultor para atendê-lo(a) com as melhores opções. 💚',
+    encerramento:
+      'Um de nossos consultores já foi avisado e entrará em contato em instantes. Obrigado por escolher a ViajeBrasil!',
+    placeholderResposta: 'Digite sua resposta…',
+    enviar: 'Enviar',
+    erroEnvio:
+      'Tivemos um problema para avisar o consultor agora, mas seus dados foram registrados — ele entrará em contato assim que possível.',
+    erroNumero: 'Por favor, informe um número de passageiros válido (de 1 a 9).',
+    erroTexto: 'Por favor, escreva uma resposta para continuarmos.',
+  },
   busca: {
     origem: 'Origem',
     destino: 'Destino',
