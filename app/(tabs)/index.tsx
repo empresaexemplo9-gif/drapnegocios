@@ -1,183 +1,202 @@
 import React from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { cores, raio } from '../../src/tema';
+import { cores, raio, sombra } from '../../src/tema';
 import { t } from '../../src/i18n';
-import {
-  CarrosselOfertas,
-  CartaoDestino,
-  CartaoPacote,
-  GradeCategorias,
-  LogoMarca,
-  TituloSecao,
-} from '../../src/componentes';
-import { listarDestinos, listarOfertas, listarPacotes } from '../../src/servicos';
-import { useAsync } from '../../src/hooks/useAsync';
-import type { Categoria } from '../../src/tipos';
+import { LogoMarca } from '../../src/componentes';
+import { abrirWhiteLabel } from '../../src/servicos';
+
+/** Roxo do card "Corporativo" (apenas nesta vitrine, fora da paleta base). */
+const ROXO = '#6D4FB0';
+
+type Card = {
+  chave: string;
+  emoji: string;
+  titulo: string;
+  sub: string;
+  cor: string;
+  selecionado?: boolean;
+  emBreve?: boolean;
+};
+
+const CARDS: Card[] = [
+  {
+    chave: 'onibus',
+    emoji: '🚌',
+    titulo: t.vitrine.onibusTitulo,
+    sub: t.vitrine.onibusSub,
+    cor: cores.verde,
+    selecionado: true,
+  },
+  {
+    chave: 'aereo',
+    emoji: '✈️',
+    titulo: t.vitrine.aereoTitulo,
+    sub: t.vitrine.aereoSub,
+    cor: cores.azul,
+  },
+  {
+    chave: 'corporativo',
+    emoji: '💼',
+    titulo: t.vitrine.corporativoTitulo,
+    sub: t.vitrine.corporativoSub,
+    cor: ROXO,
+  },
+  {
+    chave: 'hospedagem',
+    emoji: '🏨',
+    titulo: t.vitrine.hospedagemTitulo,
+    sub: t.vitrine.hospedagemSub,
+    cor: cores.laranja,
+    emBreve: true,
+  },
+];
 
 export default function Inicio() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
-  // Altura real da barra de abas (inclui área segura e o que o web aplicar);
-  // mais confiável que a constante para o feed não ficar cortado no fim.
   const alturaBarra = useBottomTabBarHeight();
 
-  const { dados: banners = [] } = useAsync(listarOfertas, []);
-  const { dados: destinos = [] } = useAsync(listarDestinos, []);
-  const { dados: pacotes = [] } = useAsync(listarPacotes, []);
-
-  const irParaBusca = (categoria: Categoria) =>
-    router.push({ pathname: '/buscar', params: { categoria } });
-
   return (
-    <ScrollView
-      style={styles.tela}
-      // A barra de abas flutua sobre o conteúdo; reservar a altura real dela
-      // evita que o fim do feed (selo de compra segura) fique cortado.
-      contentContainerStyle={{ paddingBottom: alturaBarra + 24 }}
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={styles.tela}>
       {/* Cabeçalho */}
-      <View style={[styles.cabecalho, { paddingTop: insets.top + 12 }]}>
-        <View style={styles.topo}>
-          <LogoMarca tamanho={44} />
+      <View style={[styles.cabecalho, { paddingTop: insets.top + 10 }]}>
+        <View style={styles.marcaArea}>
+          <LogoMarca tamanho={40} />
           <Text style={styles.marca}>
             <Text style={{ color: cores.textoInverso }}>viaje</Text>
-            <Text style={{ color: cores.amarelo }}>brasil</Text>
+            <Text style={{ color: cores.verde }}>brasil</Text>
           </Text>
-          <View style={{ flex: 1 }} />
-          <Pressable hitSlop={8} onPress={() => router.push('/perfil')}>
-            <Ionicons name="notifications-outline" size={24} color={cores.textoInverso} />
+        </View>
+        <View style={styles.acoesTopo}>
+          <Pressable style={styles.faleConosco} onPress={() => abrirWhiteLabel('contato')} hitSlop={6}>
+            <Ionicons name="call" size={18} color={cores.textoInverso} />
+            <Text style={styles.faleConoscoTexto}>{t.vitrine.faleConosco}</Text>
+          </Pressable>
+          <Pressable onPress={() => abrirWhiteLabel()} hitSlop={8}>
+            <Ionicons name="menu" size={28} color={cores.textoInverso} />
           </Pressable>
         </View>
-        <Text style={styles.saudacao}>{t.inicio.saudacao}</Text>
-        <Text style={styles.subSaudacao}>{t.inicio.subSaudacao}</Text>
-
-        {/* Barra de busca rápida */}
-        <Pressable style={styles.busca} onPress={() => router.push('/buscar')}>
-          <Ionicons name="search" size={20} color={cores.azul} />
-          <Text style={styles.buscaTexto}>{t.busca.cidadeDestino}</Text>
-        </Pressable>
       </View>
 
-      {/* Categorias */}
-      <View style={styles.gradeWrap}>
-        <GradeCategorias aoSelecionar={irParaBusca} />
-      </View>
-
-      {/* Carrossel de ofertas */}
-      <TituloSecao titulo={t.inicio.ofertasDestaque} />
-      <CarrosselOfertas
-        banners={banners}
-        aoTocar={(b) => router.push({ pathname: '/buscar', params: { categoria: b.categoria } })}
-      />
-
-      {/* Destinos populares */}
-      <TituloSecao
-        titulo={t.inicio.destinosPopulares}
-        aoVerTudo={() => irParaBusca('aereo')}
-      />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.carrosselH}
-      >
-        {destinos.map((d) => (
-          <CartaoDestino
-            key={d.id}
-            destino={d}
-            aoTocar={() =>
-              router.push({
-                pathname: '/resultados',
-                params: { categoria: 'aereo', destino: d.cidade },
-              })
-            }
-          />
-        ))}
-      </ScrollView>
-
-      {/* Pacotes imperdíveis */}
-      <TituloSecao
-        titulo={t.inicio.pacotesImperdiveis}
-        aoVerTudo={() => irParaBusca('turismo')}
-      />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.carrosselH}
-      >
-        {pacotes.map((p) => (
-          <CartaoPacote
-            key={p.id}
-            pacote={p}
-            aoTocar={() =>
-              router.push({ pathname: '/detalhe', params: { id: p.id } })
-            }
-          />
-        ))}
-      </ScrollView>
-
-      {/* Selo de confiança */}
-      <View style={styles.selo}>
-        <Ionicons name="shield-checkmark" size={22} color={cores.verde} />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.seloTitulo}>Compra 100% segura</Text>
-          <Text style={styles.seloTexto}>
-            Seus dados protegidos com criptografia bancária
-          </Text>
+      {/* Aba "Passagens" */}
+      <View style={styles.aba}>
+        <View style={styles.abaItem}>
+          <Ionicons name="briefcase" size={20} color={cores.verde} />
+          <Text style={styles.abaTexto}>{t.vitrine.passagens}</Text>
         </View>
+        <View style={styles.abaSublinha} />
       </View>
-    </ScrollView>
+
+      <ScrollView
+        style={styles.fundo}
+        contentContainerStyle={{ padding: 16, paddingBottom: alturaBarra + 24 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.pergunta}>
+          <Text style={{ color: cores.azulMarinho }}>{t.vitrine.perguntaA}</Text>
+          <Text style={{ color: cores.verde }}>{t.vitrine.perguntaB}</Text>
+        </Text>
+
+        <View style={styles.grade}>
+          {CARDS.map((c) => (
+            <Pressable
+              key={c.chave}
+              style={[
+                styles.card,
+                c.selecionado && { borderColor: cores.verde, borderWidth: 2 },
+                c.emBreve && { opacity: 0.85 },
+              ]}
+              disabled={c.emBreve}
+              onPress={() => abrirWhiteLabel(c.chave)}
+            >
+              <View style={styles.cardTopo}>
+                <Text style={styles.cardEmoji}>{c.emoji}</Text>
+                {c.selecionado && (
+                  <Ionicons name="checkmark-circle" size={24} color={cores.verde} />
+                )}
+              </View>
+              <View style={styles.cardTituloLinha}>
+                <Text style={[styles.cardTitulo, { color: c.cor }]}>{c.titulo}</Text>
+                {c.emBreve && (
+                  <View style={styles.emBreve}>
+                    <Text style={styles.emBreveTexto}>{t.vitrine.emBreve}</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.cardSub}>{c.sub}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  tela: { flex: 1, backgroundColor: cores.fundo },
+  tela: { flex: 1, backgroundColor: cores.azulMarinho },
+  fundo: { flex: 1, backgroundColor: cores.fundo },
   cabecalho: {
     backgroundColor: cores.azulMarinho,
     paddingHorizontal: 16,
-    paddingBottom: 24,
-    borderBottomLeftRadius: raio.xl,
-    borderBottomRightRadius: raio.xl,
-  },
-  topo: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  marca: { fontSize: 20, fontWeight: '800', letterSpacing: -0.5 },
-  saudacao: { color: cores.textoInverso, fontSize: 24, fontWeight: '800', marginTop: 18 },
-  subSaudacao: { color: cores.textoInverso, opacity: 0.85, fontSize: 14, marginTop: 4 },
-  busca: {
+    paddingBottom: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    justifyContent: 'space-between',
+  },
+  marcaArea: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  marca: { fontSize: 22, fontWeight: '800', letterSpacing: -0.5 },
+  acoesTopo: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  faleConosco: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  faleConoscoTexto: { color: cores.textoInverso, fontWeight: '700', fontSize: 14 },
+  aba: {
     backgroundColor: cores.superficie,
-    borderRadius: raio.pill,
-    paddingHorizontal: 18,
-    height: 52,
-    marginTop: 18,
+    paddingHorizontal: 16,
+    paddingTop: 14,
   },
-  buscaTexto: { color: cores.textoSuave, fontSize: 15, fontWeight: '600' },
-  gradeWrap: { marginTop: 20 },
-  carrosselH: { paddingHorizontal: 16 },
-  selo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    margin: 16,
-    marginTop: 28,
-    padding: 16,
+  abaItem: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingBottom: 10 },
+  abaTexto: { color: cores.azulMarinho, fontWeight: '800', fontSize: 18 },
+  abaSublinha: {
+    height: 3,
+    width: 120,
+    backgroundColor: cores.verde,
+    borderRadius: 999,
+  },
+  pergunta: {
+    fontSize: 28,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginVertical: 20,
+    lineHeight: 34,
+  },
+  grade: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 14 },
+  card: {
+    width: '47%',
+    flexGrow: 1,
     backgroundColor: cores.superficie,
     borderRadius: raio.lg,
     borderWidth: 1,
     borderColor: cores.borda,
+    padding: 16,
+    minHeight: 170,
+    ...sombra,
   },
-  seloTitulo: { fontWeight: '800', color: cores.azulMarinho, fontSize: 14 },
-  seloTexto: { color: cores.textoSuave, fontSize: 12, marginTop: 2 },
+  cardTopo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  cardEmoji: { fontSize: 34 },
+  cardTituloLinha: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
+  cardTitulo: { fontSize: 18, fontWeight: '800' },
+  cardSub: { color: cores.textoSuave, fontSize: 14, marginTop: 6, fontWeight: '500', lineHeight: 19 },
+  emBreve: {
+    backgroundColor: cores.laranja,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  emBreveTexto: { color: cores.textoInverso, fontSize: 12, fontWeight: '800' },
 });
