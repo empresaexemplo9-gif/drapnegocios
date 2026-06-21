@@ -67,6 +67,18 @@ export const CONSULTOR = {
   email: consultorEmailEnv.trim(),
 } as const;
 
+/**
+ * Base da função de leads (chatbot aéreo). Na web/PWA da Vercel a função fica
+ * em mesma origem (`/api/leads-aereo`), então o padrão é vazio = mesma origem.
+ * Defina `EXPO_PUBLIC_LEADS_URL` (ex.: `https://viajebrasil.vercel.app`) apenas
+ * para builds nativos (iOS/Android), que não têm "mesma origem".
+ */
+const leadsUrlEnv = process.env.EXPO_PUBLIC_LEADS_URL ?? extra.leadsUrl ?? '';
+
+export const LEADS = {
+  url: leadsUrlEnv.replace(/\/$/, ''),
+} as const;
+
 export type FonteDados = 'mock' | 'api';
 
 export const API_CONFIG = {

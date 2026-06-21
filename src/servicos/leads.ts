@@ -11,9 +11,10 @@
  * lead é enviado para o endpoint `ENDPOINTS.leads.aereo`.
  */
 import { Platform } from 'react-native';
-import { API_CONFIG, CONSULTOR, TENANT } from './config';
-import { requisitar } from './cliente';
-import { ENDPOINTS } from './endpoints';
+import { CONSULTOR, LEADS, TENANT } from './config';
+
+/** Caminho da Vercel Function que recebe os leads. */
+const CAMINHO = '/api/leads-aereo';
 
 /** Dados da viagem coletados pelo chatbot. */
 export interface LeadAereo {
@@ -41,20 +42,34 @@ function envelope(tipo: TipoEvento, extra: Record<string, unknown> = {}) {
   };
 }
 
-/** Despacha o evento ao backend (modo `api`) ou registra localmente (mock). */
+/**
+ * Resolve o destino do POST:
+ * - `EXPO_PUBLIC_LEADS_URL` definido (nativo) → `<url>/api/leads-aereo`.
+ * - Web/PWA sem URL → mesma origem (`/api/leads-aereo`) na Vercel.
+ * - Nativo sem URL → `null` (cai no modo mock).
+ */
+function urlDestino(): string | null {
+  if (LEADS.url) return `${LEADS.url}${CAMINHO}`;
+  if (Platform.OS === 'web') return CAMINHO;
+  return null;
+}
+
+/** Envia o evento à Vercel Function ou, sem destino, registra localmente. */
 async function despachar(payload: Record<string, unknown>): Promise<void> {
-  if (API_CONFIG.fonte === 'api') {
-    await requisitar(ENDPOINTS.leads.aereo, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+  const url = urlDestino();
+  if (!url) {
+    // Sem backend configurado: o e-mail real sai da Vercel Function.
+    if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log('[ViajeBrasil] lead aéreo (mock):', payload);
+    }
     return;
   }
-  // Mock: sem backend, o e-mail real sai do servidor no modo `api`.
-  if (__DEV__) {
-    // eslint-disable-next-line no-console
-    console.log('[ViajeBrasil] lead aéreo (mock):', payload);
-  }
+  await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 }
 
 /**

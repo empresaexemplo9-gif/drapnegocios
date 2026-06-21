@@ -1,41 +1,65 @@
-# Backend — leads aéreos, multi-tenant e RLS
+# Backend — leads aéreos, multi-tenant e RLS (na Vercel)
 
-Este diretório documenta o **contrato de backend** usado pelo chatbot de
-Passagens Aéreas do app e entrega as **migrações SQL** que garantem o
-isolamento por tenant via **RLS (Row Level Security)** no PostgreSQL/Supabase.
+O atendimento de Passagens Aéreas roda **na própria Vercel**, no mesmo projeto
+que publica o app web:
 
-> O app é um cliente Expo/React Native: ele **não** tem banco embutido nem
-> envia e-mail por conta própria. Quem **persiste o lead**, aplica o RLS e
-> **dispara o e-mail ao consultor** é o backend descrito aqui. Sem backend
-> (modo `mock`), o app apenas registra o lead no console em desenvolvimento.
+- **Vercel Function** `api/leads-aereo.ts` — recebe o lead do chatbot.
+- **Postgres (Neon)** — guarda o lead, com **RLS** por tenant.
+- **Resend** — envia o e-mail ao consultor.
+
+> O app (Expo/React Native) é só o cliente: ele faz `POST /api/leads-aereo` em
+> **mesma origem** na web. Sem backend (build nativo sem `EXPO_PUBLIC_LEADS_URL`),
+> o app cai no modo `mock` e só registra o lead no console em desenvolvimento.
 
 ## Fluxo do atendimento aéreo
 
 1. O cliente toca no card **"Passagens Aéreas"** na home.
-2. Abre o **chatbot** dentro do app (`src/componentes/ChatbotAereo.tsx`), que:
+2. Abre o **chatbot** (`src/componentes/ChatbotAereo.tsx`), que:
    - avisa o backend que um atendimento **iniciou** (gatilho do botão);
-   - coleta **nome(s)**, **nº de passageiros**, **data de ida**, **data de
-     volta** (ou somente ida) e **preferência de classe**;
+   - coleta **nome(s)**, **nº de passageiros**, **ida**, **volta** (ou somente
+     ida) e **classe**;
    - exibe a mensagem de **direcionamento ao consultor**.
-3. Ao concluir, o app envia o **lead completo** para o backend
-   (`POST {EXPO_PUBLIC_API_URL}/leads-aereo.php`).
-4. O backend grava em `leads_aereo` e **notifica um consultor por e-mail**.
+3. Ao concluir, o app envia o **lead completo** para `POST /api/leads-aereo`.
+4. A função grava em `leads_aereo` (com RLS) e **notifica o consultor por e-mail**.
 
-## Endpoint esperado pelo app
+## Passo a passo de deploy (Vercel)
 
-`POST {EXPO_PUBLIC_API_URL}/leads-aereo.php` (mapeado em
-`src/servicos/endpoints.ts` → `leads.aereo`). Corpo:
+1. **Banco (Neon):** projeto na Vercel → **Storage → Create Database → Neon**.
+   Isso cria `DATABASE_URL`. Aplique `sql/001_tenant_rls.sql` no SQL Editor do
+   Neon (cria tabelas + RLS + tenant `viajebrasil`).
+2. **E-mail (Resend):** crie a conta, gere uma **API Key** e (em produção)
+   verifique um domínio remetente.
+3. **Variáveis de ambiente** (Settings → Environment Variables, Production +
+   Preview) — todas **server-side** (sem `EXPO_PUBLIC_`):
+
+   | Variável          | Para quê                                              |
+   |-------------------|-------------------------------------------------------|
+   | `DATABASE_URL`    | conexão do Neon (criada pela integração)              |
+   | `RESEND_API_KEY`  | chave da API do Resend                                |
+   | `EMAIL_FROM`      | remetente, ex.: `ViajeBrasil <onboarding@resend.dev>` |
+   | `CONSULTOR_EMAIL` | destino padrão dos leads                              |
+   | `NOTIFY_ON_START` | `false` desliga o e-mail no início do chat (opc.)     |
+
+4. **Redeploy** do projeto. Pronto — `api/leads-aereo.ts` passa a responder em
+   `https://<seu-dominio>.vercel.app/api/leads-aereo`.
+
+> Apps **nativos** (iOS/Android) não têm "mesma origem": defina
+> `EXPO_PUBLIC_LEADS_URL=https://<seu-dominio>.vercel.app` no build para que o
+> app encontre a função.
+
+## Contrato do endpoint
+
+`POST /api/leads-aereo`. Corpo:
 
 ```jsonc
-// evento de início (gatilho do botão)
+// início (gatilho do botão)
 { "tipo": "inicio", "tenantId": "viajebrasil",
-  "consultorEmail": "opcional@...", "origem": "app:android",
+  "consultorEmail": "opcional@...", "origem": "app:web",
   "criadoEm": "2026-06-21T12:00:00.000Z" }
 
-// lead completo (fim da conversa)
+// completo (fim do chat)
 { "tipo": "completo", "tenantId": "viajebrasil",
-  "consultorEmail": "opcional@...", "origem": "app:ios",
-  "criadoEm": "2026-06-21T12:01:00.000Z",
+  "origem": "app:web", "criadoEm": "2026-06-21T12:01:00.000Z",
   "lead": {
     "numeroPassageiros": 2,
     "nomes": ["Maria Silva", "João Silva"],
@@ -45,45 +69,33 @@ isolamento por tenant via **RLS (Row Level Security)** no PostgreSQL/Supabase.
   } }
 ```
 
-Responsabilidades do backend ao receber `tipo: "completo"`:
-
-1. Resolver o tenant pelo `tenantId` (slug) → `tenants.id`.
-2. `SET LOCAL app.current_tenant = '<uuid>'` na transação (ativa o RLS).
-3. `INSERT` em `leads_aereo` (o `tenant_id` precisa bater com o tenant corrente,
-   senão o `WITH CHECK` da política bloqueia).
-4. O trigger emite `NOTIFY lead_aereo_novo`; um worker/edge function escuta e
-   **envia o e-mail** ao consultor (SMTP/credenciais ficam só no servidor).
+No `tipo: "completo"` a função resolve o tenant pelo slug, faz
+`set_config('app.current_tenant', <uuid>, true)` na mesma transação (ativa o
+RLS) e insere em `leads_aereo`; depois envia o e-mail via Resend.
 
 ## Isolamento multi-tenant (RLS)
 
 `sql/001_tenant_rls.sql` cria `tenants`, `consultores`, `usuarios` e
 `leads_aereo`, habilita **RLS** e cria políticas que limitam cada linha ao
-tenant corrente (`current_tenant_id()`), que aceita tanto o claim `tenant_id`
-do **JWT (Supabase)** quanto `SET LOCAL app.current_tenant` (backend próprio).
-`FORCE ROW LEVEL SECURITY` garante o isolamento mesmo para o dono da tabela.
+tenant corrente (`current_tenant_id()`, que aceita o claim `tenant_id` do **JWT**
+ou `set_config('app.current_tenant', …)`). `FORCE ROW LEVEL SECURITY` nas
+tabelas de dados garante o isolamento mesmo para o dono do banco (a tabela
+`tenants` fica sem `FORCE` de propósito, para a função resolver `slug → id`).
 
-No app, o isolamento começa no cliente: a sessão/token é guardada sob a chave
-`@viajebrasil/<tenantId>/token` (ver `src/servicos/sessao.ts`) e cada login
-carrega seu `tenantId` (`src/contextos/AutenticacaoContext.tsx`).
+No app, o isolamento começa no cliente: a sessão/token é guardada sob
+`@viajebrasil/<tenantId>/token` (`src/servicos/sessao.ts`) e cada login carrega
+seu `tenantId` (`src/contextos/AutenticacaoContext.tsx`).
 
-### Aplicar a migração
+### Aplicar a migração manualmente
 
 ```bash
 psql "$DATABASE_URL" -f sql/001_tenant_rls.sql
-# Supabase: cole o conteúdo no SQL Editor ou use `supabase db push`.
+# Neon/Supabase: cole o conteúdo no SQL Editor e rode.
 ```
 
 ## Política de distribuição entre consultores
 
-**A definir.** O lead nasce sem `consultor_id`; a regra de qual consultor
-recebe (rodízio, por região, por disponibilidade, etc.) será implementada
-depois no worker que escuta `lead_aereo_novo`. A coluna `status` já acompanha
-o ciclo (`novo → atribuido → em_atendimento → convertido/perdido`).
-
-## Variáveis de ambiente (app)
-
-| Variável                      | Para quê                                           |
-|-------------------------------|----------------------------------------------------|
-| `EXPO_PUBLIC_API_URL`         | Liga o modo `api`; base onde fica `leads-aereo.php` |
-| `EXPO_PUBLIC_TENANT_ID`       | Tenant deste build (padrão `viajebrasil`)          |
-| `EXPO_PUBLIC_CONSULTOR_EMAIL` | E-mail sugerido do consultor (destino do lead)     |
+**A definir.** O lead nasce sem `consultor_id`; a regra de qual consultor recebe
+(rodízio, por região, disponibilidade…) será implementada depois. A coluna
+`status` já acompanha o ciclo (`novo → atribuido → em_atendimento →
+convertido/perdido`).
