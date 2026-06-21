@@ -28,6 +28,18 @@ export const SITE_OFICIAL = {
   url: siteUrlEnv.replace(/\/$/, ''),
 } as const;
 
+/**
+ * White label da Buson (canal oficial de venda fornecido pela Buson). É para
+ * onde o app encaminha o cliente ao buscar/comprar — sem processar pagamento
+ * nem embutir o sistema do parceiro. Configurável por `EXPO_PUBLIC_WHITELABEL_URL`.
+ */
+const whiteLabelEnv =
+  process.env.EXPO_PUBLIC_WHITELABEL_URL ?? extra.whiteLabelUrl ?? 'https://viajebrasil.busonempresas.com.br';
+
+export const WHITE_LABEL = {
+  url: whiteLabelEnv.replace(/\/$/, ''),
+} as const;
+
 export type FonteDados = 'mock' | 'api';
 
 export const API_CONFIG = {

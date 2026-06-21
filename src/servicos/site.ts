@@ -1,22 +1,21 @@
 /**
- * Encaminhamento para o site oficial da Viaje Brasil.
+ * Encaminhamento para a white label da Buson (canal oficial de venda).
  *
- * A compra de passagens é finalizada no canal oficial (site próprio da
- * Viaje Brasil, que opera a Buson por trás). O app apenas leva o cliente
- * final até lá — sem reproduzir, adaptar ou embutir o sistema do parceiro,
- * em conformidade com o contrato Buson (cláusulas 5 e 12).
+ * A compra de passagens é finalizada no canal oficial fornecido pela Buson.
+ * O app apenas leva o cliente final até lá — sem reproduzir, adaptar ou
+ * embutir o sistema do parceiro, em conformidade com o contrato Buson.
  */
 import { Linking } from 'react-native';
-import { SITE_OFICIAL } from './config';
+import { WHITE_LABEL } from './config';
 
 /**
  * Monta a URL da white label (canal oficial), marcando a origem como o app.
- * `secao` permite direcionar (ex.: 'onibus', 'aereo') quando o canal suportar.
+ * `secao` vai como utm_campaign (ex.: 'onibus', 'aereo') para rastreio.
  */
 export function linkWhiteLabel(secao?: string, medium = 'app'): string {
   const query = new URLSearchParams({ utm_source: 'app', utm_medium: medium });
-  if (secao) query.set('secao', secao);
-  return `${SITE_OFICIAL.url}/?${query.toString()}`;
+  if (secao) query.set('utm_campaign', secao);
+  return `${WHITE_LABEL.url}/?${query.toString()}`;
 }
 
 /** Abre a white label (canal oficial) no navegador do dispositivo. */
