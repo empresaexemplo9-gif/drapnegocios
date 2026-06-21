@@ -20,9 +20,25 @@ import { abrirWhiteLabel } from '../../src/servicos';
 /** Roxo do card "Corporativo" (só nesta vitrine, fora da paleta base). */
 const ROXO = '#6D4FB0';
 
-/** Foto placeholder estável (Picsum). As fotos reais do site são de terceiros
- * e entram quando o domínio for liberado/enviado — aqui só o layout. */
-const foto = (s: string, w = 640, h = 400) => `https://picsum.photos/seed/vb-${s}/${w}/${h}`;
+/**
+ * Foto "cartão postal" real de cada cidade, do Wikimedia Commons (mídia livre,
+ * uso comercial permitido; atribuição em CREDITS.md). Carrega no navegador via
+ * Special:FilePath. Seeds sem mapa caem em placeholder estável (Picsum).
+ */
+const FOTO_CIDADE: Record<string, string> = {
+  rio: 'Christ_the_Redeemer_-_Cristo_Redentor.jpg',
+  ssa: 'Farol_da_Barra_Salvador.JPG',
+  sao: 'Ponte_estaiada_Octavio_Frias_-_Sao_Paulo.jpg',
+  floripa: 'Ponte_Hercilio_Luz_Florianopolis-edit.jpg',
+  bh: 'Igreja_Pampulha.jpg',
+};
+
+const foto = (seed: string, w = 640) => {
+  const arquivo = FOTO_CIDADE[seed];
+  return arquivo
+    ? `https://commons.wikimedia.org/wiki/Special:FilePath/${arquivo}?width=${w}`
+    : `https://picsum.photos/seed/vb-${seed}/${w}/400`;
+};
 
 const CARDS = [
   { chave: 'onibus', emoji: '🚌', titulo: t.vitrine.onibusTitulo, sub: t.vitrine.onibusSub, cor: cores.verde, selecionado: true },
@@ -169,7 +185,7 @@ export default function Inicio() {
             {OFERTAS.map((o) => (
               <View key={o.cidade} style={styles.oferta}>
                 <View>
-                  <Image source={{ uri: foto(o.seed, 500, 320) }} style={styles.ofertaImg} />
+                  <Image source={{ uri: foto(o.seed, 500) }} style={styles.ofertaImg} />
                   <View style={styles.ofertaBadge}>
                     <Text style={styles.ofertaBadgeTexto}>{o.off}</Text>
                   </View>
