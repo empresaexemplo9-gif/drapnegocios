@@ -6,11 +6,14 @@ aqui e linkamos a página de cada arquivo, onde constam autor e licença exatos.
 
 | Uso na home | Arquivo (Wikimedia Commons) | Página (autor + licença) |
 |---|---|---|
-| Pacote "Salvador Histórica" | `Farol_da_Barra_Salvador.JPG` | https://commons.wikimedia.org/wiki/File:Farol_da_Barra_Salvador.JPG |
-| Pacote "Cataratas do Iguaçu" | `Brazil_Cataratas_do_Iguacu_2.JPG` | https://commons.wikimedia.org/wiki/File:Brazil_Cataratas_do_Iguacu_2.JPG |
+| Rio de Janeiro (banner/oferta) | `Christ_the_Redeemer_-_Cristo_Redentor.jpg` | https://commons.wikimedia.org/wiki/File:Christ_the_Redeemer_-_Cristo_Redentor.jpg |
+| Salvador (banner/oferta) | `Farol_da_Barra_Salvador.JPG` | https://commons.wikimedia.org/wiki/File:Farol_da_Barra_Salvador.JPG |
+| São Paulo (banner/oferta) | `Ponte_estaiada_Octavio_Frias_-_Sao_Paulo.jpg` | https://commons.wikimedia.org/wiki/File:Ponte_estaiada_Octavio_Frias_-_Sao_Paulo.jpg |
+| Florianópolis (banner) | `Ponte_Hercilio_Luz_Florianopolis-edit.jpg` | https://commons.wikimedia.org/wiki/File:Ponte_Hercilio_Luz_Florianopolis-edit.jpg |
+| Belo Horizonte (oferta) | `Igreja_Pampulha.jpg` | https://commons.wikimedia.org/wiki/File:Igreja_Pampulha.jpg |
 
-As demais ilustrações da home/resultados usam o **Lorem Picsum** (fotos
-genéricas estáveis), sem necessidade de atribuição.
+As demais ilustrações (placeholders) usam o **Lorem Picsum** (fotos genéricas
+estáveis), sem necessidade de atribuição.
 
 > Ação recomendada: abrir as páginas acima e confirmar o **autor** e a **licença**
 > (ex.: CC BY-SA 4.0) de cada imagem; se a licença exigir, este crédito deve
