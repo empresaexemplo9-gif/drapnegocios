@@ -9,13 +9,27 @@
 import { Linking } from 'react-native';
 import { SITE_OFICIAL } from './config';
 
-/** Monta a URL do checkout oficial, marcando a origem como o app. */
-export function linkCheckoutOficial(): string {
-  const query = new URLSearchParams({ utm_source: 'app', utm_medium: 'checkout' });
+/**
+ * Monta a URL da white label (canal oficial), marcando a origem como o app.
+ * `secao` permite direcionar (ex.: 'onibus', 'aereo') quando o canal suportar.
+ */
+export function linkWhiteLabel(secao?: string, medium = 'app'): string {
+  const query = new URLSearchParams({ utm_source: 'app', utm_medium: medium });
+  if (secao) query.set('secao', secao);
   return `${SITE_OFICIAL.url}/?${query.toString()}`;
 }
 
-/** Abre o checkout oficial no navegador do dispositivo. */
+/** Abre a white label (canal oficial) no navegador do dispositivo. */
+export async function abrirWhiteLabel(secao?: string): Promise<void> {
+  await Linking.openURL(linkWhiteLabel(secao));
+}
+
+/** O checkout encaminha para a white label (medium = checkout). */
+export function linkCheckoutOficial(): string {
+  return linkWhiteLabel(undefined, 'checkout');
+}
+
+/** Abre o checkout oficial (white label) no navegador do dispositivo. */
 export async function abrirCheckoutOficial(): Promise<void> {
   await Linking.openURL(linkCheckoutOficial());
 }
