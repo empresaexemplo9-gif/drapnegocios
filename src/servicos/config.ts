@@ -40,6 +40,33 @@ export const WHITE_LABEL = {
   url: whiteLabelEnv.replace(/\/$/, ''),
 } as const;
 
+/**
+ * Tenant (locatário) ao qual este build pertence. Toda a operação do app é
+ * isolada por tenant: a sessão/token é guardada sob esta chave (ver
+ * `sessao.ts`) e os leads enviados ao backend levam este `tenantId`, que o
+ * backend usa para aplicar o RLS (isolamento por linha) no banco.
+ * Configurável por `EXPO_PUBLIC_TENANT_ID` (padrão: `viajebrasil`).
+ */
+const tenantEnv = process.env.EXPO_PUBLIC_TENANT_ID ?? extra.tenantId ?? 'viajebrasil';
+
+export const TENANT = {
+  id: tenantEnv.trim() || 'viajebrasil',
+} as const;
+
+/**
+ * E-mail do consultor (ou da fila de consultores) que recebe os leads de
+ * passagens aéreas. Opcional no app: quem efetivamente dispara o e-mail é o
+ * backend (modo `api`); este valor só é repassado como sugestão de destino.
+ * A política de distribuição entre consultores será definida no backend.
+ * Configurável por `EXPO_PUBLIC_CONSULTOR_EMAIL`.
+ */
+const consultorEmailEnv =
+  process.env.EXPO_PUBLIC_CONSULTOR_EMAIL ?? extra.consultorEmail ?? '';
+
+export const CONSULTOR = {
+  email: consultorEmailEnv.trim(),
+} as const;
+
 export type FonteDados = 'mock' | 'api';
 
 export const API_CONFIG = {

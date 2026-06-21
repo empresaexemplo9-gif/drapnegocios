@@ -52,6 +52,11 @@ export const ENDPOINTS = {
     pacotes: null as CaminhoOpcional,
     produto: null as null | ((id: string) => string),
   },
+  leads: {
+    // Recebe o lead do chatbot de passagens aéreas e dispara, server-side, a
+    // notificação por e-mail ao consultor (a chave/SMTP fica no backend).
+    aereo: '/leads-aereo.php' as Caminho,
+  },
   pedidos: {
     criarReserva: '/criar-reserva.php' as Caminho,
     cancelarReserva: '/cancelar-reserva.php' as Caminho,
