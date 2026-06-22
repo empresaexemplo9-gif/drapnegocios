@@ -20,8 +20,17 @@ import { abrirWhiteLabel } from '../../src/servicos';
 /** Roxo do card "Corporativo" (só nesta vitrine, fora da paleta base). */
 const ROXO = '#6D4FB0';
 
-/** Imagem ilustrativa genérica e estável (Lorem Picsum), determinística por seed. */
-const foto = (seed: string, w = 640) => `https://picsum.photos/seed/vb-${seed}/${w}/400`;
+/** Fotos reais das cidades (enviadas pelo cliente, uso livre) em public/destinos/.
+ * Seeds sem foto caem em placeholder estável (Lorem Picsum). */
+const FOTO_DESTINO: Record<string, string> = {
+  rio: '/destinos/rio.jpg',
+  ssa: '/destinos/salvador.jpg',
+  bh: '/destinos/belo-horizonte.jpg',
+  sao: '/destinos/sao-paulo.jpg',
+  floripa: '/destinos/florianopolis.jpg',
+};
+const foto = (seed: string, w = 640) =>
+  FOTO_DESTINO[seed] ?? `https://picsum.photos/seed/vb-${seed}/${w}/400`;
 
 const CARDS = [
   { chave: 'onibus', emoji: '🚌', titulo: t.vitrine.onibusTitulo, sub: t.vitrine.onibusSub, cor: cores.verde, selecionado: true },
