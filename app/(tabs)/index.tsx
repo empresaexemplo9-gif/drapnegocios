@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -78,6 +79,8 @@ const SOCIAL: (keyof typeof Ionicons.glyphMap)[] = ['logo-instagram', 'logo-face
 
 export default function Inicio() {
   const alturaBarra = useBottomTabBarHeight();
+  const { width } = useWindowDimensions();
+  const largoRodape = width >= 900; // distribui o rodapé em colunas no desktop
   const [email, setEmail] = useState('');
   const [chatAereoAberto, setChatAereoAberto] = useState(false);
   // Conteúdo data-driven: começa no fallback e troca pelo backend se houver.
@@ -273,50 +276,63 @@ export default function Inicio() {
 
         {/* Rodapé */}
         <View style={styles.rodape}>
-          <Text style={styles.rodapeBaixe}>{t.vitrine.baixeApp}</Text>
-          <Text style={styles.rodapeBaixeSub}>{t.vitrine.baixeAppSub}</Text>
-          {/* Instalar PWA — só aparece em Android/iOS (web). Botões de loja
-              removidos provisoriamente até as apps nativas existirem. */}
-          <BotaoInstalarApp />
+          <View style={styles.rodapeInner}>
+            {/* Colunas principais (lado a lado no desktop, empilhadas no mobile) */}
+            <View style={[styles.rodapeCols, largoRodape && styles.rodapeColsRow]}>
+              <View style={[styles.rodapeCol, largoRodape && styles.rodapeColFlex]}>
+                <Text style={styles.rodapeBaixe}>{t.vitrine.baixeApp}</Text>
+                <Text style={styles.rodapeBaixeSub}>{t.vitrine.baixeAppSub}</Text>
+                {/* Instalar PWA — só em Android/iOS (web); lojas removidas por ora. */}
+                <BotaoInstalarApp />
+              </View>
 
-          <View style={styles.rodapeLinha} />
+              <View style={[styles.rodapeCol, largoRodape && styles.rodapeColFlex]}>
+                <View style={styles.rodapeSeguranca}>
+                  <Ionicons name="shield-checkmark" size={20} color={cores.verde} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rodapeSegTitulo}>{t.vitrine.compraSegura}</Text>
+                    <Text style={styles.rodapeSegSub}>{t.vitrine.compraSeguraSub}</Text>
+                  </View>
+                </View>
+                <Text style={styles.rodapeRotulo}>{t.vitrine.formasPagamento}</Text>
+                <View style={styles.pagamentos}>
+                  <Ionicons name="card" size={22} color={cores.textoInverso} />
+                  <Text style={styles.pagamentosTexto}>Pix · Visa · Mastercard · Boleto</Text>
+                </View>
+              </View>
 
-          <View style={styles.rodapeSeguranca}>
-            <Ionicons name="shield-checkmark" size={20} color={cores.verde} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.rodapeSegTitulo}>{t.vitrine.compraSegura}</Text>
-              <Text style={styles.rodapeSegSub}>{t.vitrine.compraSeguraSub}</Text>
+              <View style={styles.rodapeCol}>
+                <Text style={styles.rodapeRotulo}>{t.vitrine.sigaNos}</Text>
+                <View style={styles.social}>
+                  {SOCIAL.map((s) => (
+                    <Pressable key={s} hitSlop={8}>
+                      <Ionicons name={s} size={24} color={cores.textoInverso} />
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
             </View>
-          </View>
 
-          <Text style={styles.rodapeRotulo}>{t.vitrine.formasPagamento}</Text>
-          <View style={styles.pagamentos}>
-            <Ionicons name="card" size={22} color={cores.textoInverso} />
-            <Text style={styles.pagamentosTexto}>Pix · Visa · Mastercard · Boleto</Text>
-          </View>
+            <View style={styles.rodapeLinha} />
 
-          <Text style={styles.rodapeRotulo}>{t.vitrine.sigaNos}</Text>
-          <View style={styles.social}>
-            {SOCIAL.map((s) => (
-              <Pressable key={s} hitSlop={8}>
-                <Ionicons name={s} size={24} color={cores.textoInverso} />
-              </Pressable>
-            ))}
+            {/* Base institucional */}
+            <View style={[largoRodape && styles.rodapeBaseRow]}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.rodapeEmpresa}>{t.vitrine.empresaNome}</Text>
+                <Text style={styles.rodapeCnpj}>{t.vitrine.cnpj}</Text>
+              </View>
+              <View style={[styles.rodapeLinks, largoRodape && { marginTop: 0 }]}>
+                <Pressable>
+                  <Text style={styles.rodapeLink}>{t.vitrine.politica}</Text>
+                </Pressable>
+                <Text style={styles.rodapeSep}>·</Text>
+                <Pressable>
+                  <Text style={styles.rodapeLink}>{t.vitrine.termos}</Text>
+                </Pressable>
+              </View>
+            </View>
+            <Text style={styles.rodapeCopy}>{t.vitrine.copyright}</Text>
           </View>
-
-          <View style={styles.rodapeLinha} />
-          <Text style={styles.rodapeEmpresa}>{t.vitrine.empresaNome}</Text>
-          <Text style={styles.rodapeCnpj}>{t.vitrine.cnpj}</Text>
-          <View style={styles.rodapeLinks}>
-            <Pressable>
-              <Text style={styles.rodapeLink}>{t.vitrine.politica}</Text>
-            </Pressable>
-            <Text style={styles.rodapeSep}>·</Text>
-            <Pressable>
-              <Text style={styles.rodapeLink}>{t.vitrine.termos}</Text>
-            </Pressable>
-          </View>
-          <Text style={styles.rodapeCopy}>{t.vitrine.copyright}</Text>
         </View>
       </ScrollView>
 
@@ -397,6 +413,12 @@ const styles = StyleSheet.create({
   },
 
   rodape: { backgroundColor: '#0F1C36', paddingHorizontal: 20, paddingTop: 24, paddingBottom: 28 },
+  rodapeInner: { width: '100%', maxWidth: 1100, alignSelf: 'center' },
+  rodapeCols: { gap: 20 },
+  rodapeColsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 48 },
+  rodapeCol: { gap: 12 },
+  rodapeColFlex: { flex: 1 },
+  rodapeBaseRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16 },
   rodapeBaixe: { color: cores.textoInverso, fontWeight: '800', fontSize: 18 },
   rodapeBaixeSub: { color: cores.textoInverso, opacity: 0.8, fontSize: 13, marginTop: 4, fontWeight: '500' },
   lojas: { flexDirection: 'row', gap: espaco.md, marginTop: espaco.md },
