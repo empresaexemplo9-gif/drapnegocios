@@ -21,10 +21,11 @@ export interface SessaoAuth {
   usuario: UsuarioAuth;
 }
 
-/** Resolve a URL do endpoint (mesma origem na web; `null` = sem backend). */
+/** Resolve a URL do endpoint. Na web é SEMPRE mesma origem (evita o preview
+ *  chamar a API de produção); `LEADS.url` só vale no nativo. `null` = sem backend. */
 function urlOuNull(caminho: string): string | null {
-  if (LEADS.url) return `${LEADS.url}${caminho}`;
   if (Platform.OS === 'web') return caminho;
+  if (LEADS.url) return `${LEADS.url}${caminho}`;
   return null;
 }
 

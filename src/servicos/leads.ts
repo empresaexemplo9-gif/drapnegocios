@@ -55,8 +55,8 @@ function envelope(tipo: TipoEvento, extra: Record<string, unknown> = {}) {
  * - Nativo sem URL → `null` (cai no modo mock).
  */
 function urlDestino(): string | null {
-  if (LEADS.url) return `${LEADS.url}${CAMINHO}`;
   if (Platform.OS === 'web') return CAMINHO;
+  if (LEADS.url) return `${LEADS.url}${CAMINHO}`;
   return null;
 }
 

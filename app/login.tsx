@@ -25,8 +25,8 @@ export default function Login() {
       const sessao = await autenticar(email.trim(), senha);
       entrar(sessao.usuario.email, sessao.usuario.papel, sessao.usuario.nome);
       router.back();
-    } catch {
-      setErro(t.login.erro);
+    } catch (e) {
+      setErro(e instanceof Error && e.message ? e.message : t.login.erro);
     } finally {
       setEntrando(false);
     }

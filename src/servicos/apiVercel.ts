@@ -6,10 +6,11 @@ import { Platform } from 'react-native';
 import { LEADS } from './config';
 import { tokenAtual } from './sessao';
 
-/** Resolve a URL (mesma origem na web; `null` = sem backend). */
+/** Resolve a URL. Na web é SEMPRE mesma origem (evita o preview chamar a API de
+ *  produção); `LEADS.url` só vale no nativo. `null` = sem backend. */
 export function urlVercel(caminho: string): string | null {
-  if (LEADS.url) return `${LEADS.url}${caminho}`;
   if (Platform.OS === 'web') return caminho;
+  if (LEADS.url) return `${LEADS.url}${caminho}`;
   return null;
 }
 
