@@ -2,16 +2,36 @@
 
 Produz, sem dependências externas:
 - icon.png          1024x1024, fundo branco opaco (iOS não aceita transparência).
-- adaptive-icon.png 1024x1024, transparente, logo na zona segura (Android).
+- adaptive-icon.png 1024x1024, fundo branco, símbolo na zona segura (Android).
 - favicon.png       48x48, fundo branco (web).
+- public/icons/*    192/512 PWA, fundo branco.
 
-A splash continua usando a logo.png (círculo com cantos transparentes).
+Por padrão os ÍCONES usam apenas o SÍMBOLO (mapa do Brasil) — sem o texto
+"viaje brasil" nem a borda do círculo, sobre fundo branco. A região do símbolo
+é recortada da logo via frações configuráveis (env), pois a logo tem texto
+embaixo. Ajuste fino com as variáveis de ambiente, conferindo o resultado:
+
+    SIMBOLO=1 (padrão)         usa só o mapa nos ícones; SIMBOLO=0 usa a logo inteira
+    SIMB_L / SIMB_T           canto superior-esquerdo do recorte (frações 0..1)
+    SIMB_R / SIMB_B           canto inferior-direito do recorte (frações 0..1)
+    SIMB_PAD                  margem ao redor do símbolo no ícone (fração; padrão 0.12)
+
+A splash e a logo dentro do app continuam usando a logo.png inteira.
 """
 
 import math
 import os
 import struct
 import zlib
+
+# Recorte padrão do símbolo (mapa) dentro da logo circular. Estimativa para a
+# arte com o mapa em cima e o texto embaixo; afine pelos envs SIMB_* e confira.
+SIMBOLO = os.environ.get("SIMBOLO", "1") != "0"
+SIMB_L = float(os.environ.get("SIMB_L", "0.27"))
+SIMB_T = float(os.environ.get("SIMB_T", "0.15"))
+SIMB_R = float(os.environ.get("SIMB_R", "0.74"))
+SIMB_B = float(os.environ.get("SIMB_B", "0.60"))
+SIMB_PAD = float(os.environ.get("SIMB_PAD", "0.12"))
 
 
 # ---------- decodificação ----------
@@ -151,6 +171,41 @@ def aspecto(sw, sh, alvo):
     return max(1, round(sw / sh * alvo)), alvo
 
 
+def recortar_frac(px, sw, sh, l, t, r, b):
+    """Recorta a região [l,t,r,b] (frações 0..1) e retorna (w, h, pixels)."""
+    x0, y0 = max(0, int(l * sw)), max(0, int(t * sh))
+    x1, y1 = min(sw, int(r * sw)), min(sh, int(b * sh))
+    cw, ch = max(1, x1 - x0), max(1, y1 - y0)
+    out = bytearray(cw * ch * 4)
+    for y in range(ch):
+        src = ((y0 + y) * sw + x0) * 4
+        out[y * cw * 4 : (y + 1) * cw * 4] = px[src : src + cw * 4]
+    return cw, ch, out
+
+
+def achatar_branco(px):
+    """Compõe sobre branco (remove transparência) — cantos do círculo viram branco."""
+    out = bytearray(px)
+    for i in range(0, len(out), 4):
+        a = out[i + 3]
+        if a < 255:
+            ia = 255 - a
+            for c in range(3):
+                out[i + c] = (out[i + c] * a + 255 * ia) // 255
+            out[i + 3] = 255
+    return out
+
+
+def icone_branco(fonte, fw, fh, tam, pad):
+    """Coloca `fonte` (RGBA) centralizada num quadrado branco `tam`, com margem `pad`."""
+    util = max(1, int(tam * (1 - 2 * pad)))
+    dw, dh = aspecto(fw, fh, util)
+    redim = redimensionar(fonte, fw, fh, dw, dh)
+    cv = canvas(tam, tam, (255, 255, 255, 255))
+    colar(cv, tam, redim, dw, dh, (tam - dw) // 2, (tam - dh) // 2)
+    return cv
+
+
 if __name__ == "__main__":
     base_dir = os.path.join(os.path.dirname(__file__), "..", "assets")
     sw, sh, logo = ler_png_rgba(os.path.join(base_dir, "logo.png"))
@@ -158,33 +213,26 @@ if __name__ == "__main__":
     BRANCO = (255, 255, 255, 255)
     VAZIO = (255, 255, 255, 0)
 
-    # 1) icon.png — 1024 fundo branco opaco (full bleed)
-    iw, ih = aspecto(sw, sh, 1024)
-    redim = redimensionar(logo, sw, sh, iw, ih)
-    icone = canvas(1024, 1024, BRANCO)
-    colar(icone, 1024, redim, iw, ih, (1024 - iw) // 2, (1024 - ih) // 2)
-    escrever_png_rgba(os.path.join(base_dir, "icon.png"), 1024, 1024, icone)
+    # Fonte dos ícones: só o SÍMBOLO (mapa) recortado e achatado sobre branco,
+    # ou a logo inteira (SIMBOLO=0). Sempre sem transparência (fundo branco).
+    if SIMBOLO:
+        fw, fh, fonte = recortar_frac(logo, sw, sh, SIMB_L, SIMB_T, SIMB_R, SIMB_B)
+        fonte = achatar_branco(fonte)
+        print(f"símbolo recortado: {fw}x{fh} (de {sw}x{sh})")
+    else:
+        fw, fh, fonte = sw, sh, achatar_branco(logo)
 
-    # 2) adaptive-icon.png — 1024 transparente, logo a ~66% (zona segura Android)
-    aw, ah = aspecto(sw, sh, 680)
-    redim2 = redimensionar(logo, sw, sh, aw, ah)
-    adapt = canvas(1024, 1024, VAZIO)
-    colar(adapt, 1024, redim2, aw, ah, (1024 - aw) // 2, (1024 - ah) // 2)
-    escrever_png_rgba(os.path.join(base_dir, "adaptive-icon.png"), 1024, 1024, adapt)
+    # 1) icon.png — 1024 fundo branco (iOS não aceita transparência)
+    escrever_png_rgba(os.path.join(base_dir, "icon.png"), 1024, 1024, icone_branco(fonte, fw, fh, 1024, SIMB_PAD))
+
+    # 2) adaptive-icon.png — 1024 fundo branco (Android, backgroundColor branco)
+    escrever_png_rgba(os.path.join(base_dir, "adaptive-icon.png"), 1024, 1024, icone_branco(fonte, fw, fh, 1024, max(SIMB_PAD, 0.18)))
 
     # 3) favicon.png — 48 fundo branco
-    fw, fh = aspecto(sw, sh, 48)
-    redim3 = redimensionar(logo, sw, sh, fw, fh)
-    fav = canvas(48, 48, BRANCO)
-    colar(fav, 48, redim3, fw, fh, (48 - fw) // 2, (48 - fh) // 2)
-    escrever_png_rgba(os.path.join(base_dir, "favicon.png"), 48, 48, fav)
+    escrever_png_rgba(os.path.join(base_dir, "favicon.png"), 48, 48, icone_branco(fonte, fw, fh, 48, SIMB_PAD))
 
     # 4) ícones do PWA (web instalável) em ../public/icons
     pub = os.path.join(base_dir, "..", "public", "icons")
     os.makedirs(pub, exist_ok=True)
     for tam in (192, 512):
-        pw, ph = aspecto(sw, sh, tam)
-        r = redimensionar(logo, sw, sh, pw, ph)
-        cv = canvas(tam, tam, BRANCO)
-        colar(cv, tam, r, pw, ph, (tam - pw) // 2, (tam - ph) // 2)
-        escrever_png_rgba(os.path.join(pub, f"icon-{tam}.png"), tam, tam, cv)
+        escrever_png_rgba(os.path.join(pub, f"icon-{tam}.png"), tam, tam, icone_branco(fonte, fw, fh, tam, SIMB_PAD))
