@@ -19,7 +19,7 @@ import { empresa } from '../../src/dados/empresa';
 import { cores, espaco, raio, sombras, tipografia } from '../../src/tema';
 import { t } from '../../src/i18n';
 import { Avatar, BotaoInstalarApp, Cartao, ChatbotAereo, HeroGradiente, LogoMarca, Selo } from '../../src/componentes';
-import { listarOfertasHome } from '../../src/servicos';
+import { abrirWhiteLabel, listarOfertasHome } from '../../src/servicos';
 import { OFERTAS_PADRAO, type OfertaPadrao } from '../../src/dados/ofertasPadrao';
 import type { HomeOferta } from '../../src/tipos';
 
@@ -154,7 +154,7 @@ export default function Inicio() {
                   c.emBreve
                     ? undefined
                     : c.chave === 'onibus'
-                      ? () => router.push('/onibus')
+                      ? () => abrirWhiteLabel('onibus')
                       : c.chave === 'aereo'
                         ? () => setChatAereoAberto(true)
                         : undefined
