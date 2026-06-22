@@ -1,11 +1,10 @@
 /**
- * Chatbot de atendimento de Passagens Aéreas (dentro do app).
+ * Chatbot de Passagens Aéreas (dentro do app).
  *
- * Abre como uma folha modal quando o cliente toca no card "Passagens Aéreas".
- * Coleta, em conversa, os dados da viagem (passageiros, nomes, datas e classe)
- * e, ao iniciar e ao concluir, aciona os serviços de lead que avisam um
- * consultor por e-mail (server-side, no modo `api`). Ao final, exibe a mensagem
- * de direcionamento ao consultor.
+ * Fluxo: coleta os dados da viagem (origem, destino, passageiros, nomes, datas,
+ * classe) → cria o lead → vira um CHAT ao vivo com o consultor (polling), tudo
+ * no app. O cliente é anônimo (usa um token salvo localmente). Ao final pode
+ * ENTRAR na conta ou informar WhatsApp (exceção). Não há e-mail.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -21,28 +20,25 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { cores, raio, sombra } from '../tema';
 import { t } from '../i18n';
 import {
+  TENANT,
   enviarLeadAereo,
-  notificarInicioAtendimentoAereo,
+  enviarMensagemCliente,
+  informarWhatsappCliente,
+  listarMensagensCliente,
   type LeadAereo,
 } from '../servicos';
+import { useAutenticacao } from '../contextos/AutenticacaoContext';
+import type { MensagemChat } from '../tipos';
 
-/** Etapas da conversa, em ordem. */
-type Etapa =
-  | 'origem'
-  | 'destino'
-  | 'passageiros'
-  | 'nomes'
-  | 'ida'
-  | 'volta'
-  | 'classe'
-  | 'contato'
-  | 'final';
+type Etapa = 'origem' | 'destino' | 'passageiros' | 'nomes' | 'ida' | 'volta' | 'classe' | 'conversa';
 
-interface Mensagem {
+interface MsgLocal {
   id: string;
   autor: 'bot' | 'cliente';
   texto: string;
@@ -53,54 +49,99 @@ interface Props {
   aoFechar: () => void;
 }
 
+const CHAVE = `@viajebrasil/${TENANT.id}/chatAereo`;
 let seq = 0;
 const novoId = () => `m${++seq}`;
+const ETAPAS_TEXTO: Etapa[] = ['origem', 'destino', 'passageiros', 'nomes', 'ida', 'volta'];
 
 export function ChatbotAereo({ visivel, aoFechar }: Props) {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { autenticado } = useAutenticacao();
   const scrollRef = useRef<ScrollView>(null);
 
-  const [mensagens, setMensagens] = useState<Mensagem[]>([]);
+  const [mensagens, setMensagens] = useState<MsgLocal[]>([]);
+  const [conversa, setConversa] = useState<MensagemChat[]>([]);
   const [etapa, setEtapa] = useState<Etapa>('origem');
   const [entrada, setEntrada] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [lead, setLead] = useState<{ id: string; token: string } | null>(null);
+  const [modoWhats, setModoWhats] = useState(false);
+  const [opcoesVisiveis, setOpcoesVisiveis] = useState(true);
 
-  // Dados coletados ao longo da conversa.
   const dados = useRef<Partial<LeadAereo>>({});
 
-  const adicionarBot = useCallback((texto: string) => {
-    setMensagens((ms) => [...ms, { id: novoId(), autor: 'bot', texto }]);
+  const addBot = useCallback((texto: string) => {
+    setMensagens((m) => [...m, { id: novoId(), autor: 'bot', texto }]);
+  }, []);
+  const addCliente = useCallback((texto: string) => {
+    setMensagens((m) => [...m, { id: novoId(), autor: 'cliente', texto }]);
   }, []);
 
-  const adicionarCliente = useCallback((texto: string) => {
-    setMensagens((ms) => [...ms, { id: novoId(), autor: 'cliente', texto }]);
-  }, []);
-
-  // (Re)inicia a conversa toda vez que o modal abre.
+  // (Re)inicia ou retoma a conversa quando o modal abre.
   useEffect(() => {
     if (!visivel) return;
-    seq = 0;
-    dados.current = {};
-    setEntrada('');
-    setEnviando(false);
-    setEtapa('origem');
-    setMensagens([
-      { id: novoId(), autor: 'bot', texto: t.chatAereo.saudacao },
-      { id: novoId(), autor: 'bot', texto: t.chatAereo.perguntaOrigem },
-    ]);
-    // Gatilho do botão: avisa que um atendimento foi iniciado (melhor-esforço).
-    void notificarInicioAtendimentoAereo();
+    let ativo = true;
+    (async () => {
+      seq = 0;
+      dados.current = {};
+      setEntrada('');
+      setEnviando(false);
+      setModoWhats(false);
+      setOpcoesVisiveis(true);
+      setConversa([]);
+
+      let salvo: { id: string; token: string } | null = null;
+      try {
+        const raw = await AsyncStorage.getItem(CHAVE);
+        if (raw) salvo = JSON.parse(raw);
+      } catch {
+        salvo = null;
+      }
+      if (!ativo) return;
+
+      if (salvo?.id && salvo?.token) {
+        setLead(salvo);
+        setEtapa('conversa');
+        setMensagens([{ id: novoId(), autor: 'bot', texto: t.chatAereo.retomando }]);
+      } else {
+        setLead(null);
+        setEtapa('origem');
+        setMensagens([
+          { id: novoId(), autor: 'bot', texto: t.chatAereo.saudacao },
+          { id: novoId(), autor: 'bot', texto: t.chatAereo.perguntaOrigem },
+        ]);
+      }
+    })();
+    return () => {
+      ativo = false;
+    };
   }, [visivel]);
+
+  // Polling do chat enquanto a conversa está ativa.
+  useEffect(() => {
+    if (etapa !== 'conversa' || !lead?.id || !lead?.token) return;
+    let ativo = true;
+    const buscar = async () => {
+      const msgs = await listarMensagensCliente(lead.id, lead.token);
+      if (ativo) setConversa(msgs);
+    };
+    void buscar();
+    const id = setInterval(buscar, 4000);
+    return () => {
+      ativo = false;
+      clearInterval(id);
+    };
+  }, [etapa, lead]);
 
   // Mantém a conversa rolada para a última mensagem.
   useEffect(() => {
     const id = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 60);
     return () => clearTimeout(id);
-  }, [mensagens]);
+  }, [mensagens, conversa, enviando]);
 
-  /** Finaliza: monta o lead, envia ao backend e exibe o direcionamento. */
   const finalizar = useCallback(async () => {
-    const lead: LeadAereo = {
+    const leadDados: LeadAereo = {
       origem: dados.current.origem ?? '',
       destino: dados.current.destino ?? '',
       numeroPassageiros: dados.current.numeroPassageiros ?? 1,
@@ -108,160 +149,182 @@ export function ChatbotAereo({ visivel, aoFechar }: Props) {
       dataIda: dados.current.dataIda ?? '',
       dataVolta: dados.current.dataVolta ?? null,
       classe: dados.current.classe ?? '',
-      telefone: dados.current.telefone ?? '',
+      telefone: '',
     };
 
-    setEtapa('final');
-    adicionarBot(t.chatAereo.resumoTitulo);
-    adicionarBot(
+    setEtapa('conversa');
+    addBot(t.chatAereo.resumoTitulo);
+    addBot(
       [
-        t.chatAereo.resumoTrecho(lead.origem, lead.destino),
-        t.chatAereo.resumoPassageiros(lead.numeroPassageiros),
-        t.chatAereo.resumoNomes(lead.nomes.join(', ')),
-        t.chatAereo.resumoIda(lead.dataIda),
-        t.chatAereo.resumoVolta(lead.dataVolta ?? t.chatAereo.somenteIda),
-        t.chatAereo.resumoClasse(lead.classe),
-        t.chatAereo.resumoContato(lead.telefone),
+        t.chatAereo.resumoTrecho(leadDados.origem, leadDados.destino),
+        t.chatAereo.resumoPassageiros(leadDados.numeroPassageiros),
+        t.chatAereo.resumoNomes(leadDados.nomes.join(', ')),
+        t.chatAereo.resumoIda(leadDados.dataIda),
+        t.chatAereo.resumoVolta(leadDados.dataVolta ?? t.chatAereo.somenteIda),
+        t.chatAereo.resumoClasse(leadDados.classe),
       ].join('\n'),
     );
+    addBot(t.chatAereo.direcionando);
 
     setEnviando(true);
     try {
-      await enviarLeadAereo(lead);
-      adicionarBot(t.chatAereo.direcionando);
-      adicionarBot(t.chatAereo.encerramento);
+      const r = await enviarLeadAereo(leadDados);
+      if (r.leadId && r.clienteToken) {
+        const novo = { id: r.leadId, token: r.clienteToken };
+        setLead(novo);
+        try {
+          await AsyncStorage.setItem(CHAVE, JSON.stringify(novo));
+        } catch {
+          /* melhor-esforço */
+        }
+        addBot(t.chatAereo.encerramento);
+      } else {
+        addBot(t.chatAereo.semBackend);
+      }
     } catch {
-      adicionarBot(t.chatAereo.direcionando);
-      adicionarBot(t.chatAereo.erroEnvio);
+      addBot(t.chatAereo.semBackend);
     } finally {
       setEnviando(false);
     }
-  }, [adicionarBot]);
+  }, [addBot]);
 
-  /** Processa uma resposta livre (texto) conforme a etapa atual. */
   const responder = useCallback(
-    (textoBruto: string) => {
-      const texto = textoBruto.trim();
+    (bruto: string) => {
+      const texto = bruto.trim();
       if (!texto) return;
-
       if (etapa === 'origem') {
         dados.current.origem = texto;
-        adicionarCliente(texto);
+        addCliente(texto);
         setEtapa('destino');
-        adicionarBot(t.chatAereo.perguntaDestino);
-        return;
-      }
-
-      if (etapa === 'destino') {
+        addBot(t.chatAereo.perguntaDestino);
+      } else if (etapa === 'destino') {
         dados.current.destino = texto;
-        adicionarCliente(texto);
+        addCliente(texto);
         setEtapa('passageiros');
-        adicionarBot(t.chatAereo.perguntaPassageiros);
-        return;
-      }
-
-      if (etapa === 'passageiros') {
+        addBot(t.chatAereo.perguntaPassageiros);
+      } else if (etapa === 'passageiros') {
         const n = parseInt(texto.replace(/\D/g, ''), 10);
         if (!n || n < 1 || n > 9) {
-          adicionarCliente(texto);
-          adicionarBot(t.chatAereo.erroNumero);
+          addCliente(texto);
+          addBot(t.chatAereo.erroNumero);
           return;
         }
         dados.current.numeroPassageiros = n;
-        adicionarCliente(String(n));
+        addCliente(String(n));
         setEtapa('nomes');
-        adicionarBot(t.chatAereo.perguntaNomes);
-        return;
-      }
-
-      if (etapa === 'nomes') {
-        const nomes = texto
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean);
+        addBot(t.chatAereo.perguntaNomes);
+      } else if (etapa === 'nomes') {
+        const nomes = texto.split(',').map((s) => s.trim()).filter(Boolean);
         dados.current.nomes = nomes;
-        adicionarCliente(nomes.join(', '));
+        addCliente(nomes.join(', '));
         setEtapa('ida');
-        adicionarBot(t.chatAereo.perguntaDataIda);
-        return;
-      }
-
-      if (etapa === 'ida') {
+        addBot(t.chatAereo.perguntaDataIda);
+      } else if (etapa === 'ida') {
         dados.current.dataIda = texto;
-        adicionarCliente(texto);
+        addCliente(texto);
         setEtapa('volta');
-        adicionarBot(t.chatAereo.perguntaDataVolta);
-        return;
-      }
-
-      if (etapa === 'volta') {
+        addBot(t.chatAereo.perguntaDataVolta);
+      } else if (etapa === 'volta') {
         dados.current.dataVolta = texto;
-        adicionarCliente(texto);
+        addCliente(texto);
         setEtapa('classe');
-        adicionarBot(t.chatAereo.perguntaClasse);
-        return;
-      }
-
-      if (etapa === 'contato') {
-        // Exige ao menos alguns dígitos para ser um telefone plausível.
-        if (texto.replace(/\D/g, '').length < 8) {
-          adicionarCliente(texto);
-          adicionarBot(t.chatAereo.erroTelefone);
-          return;
-        }
-        dados.current.telefone = texto;
-        adicionarCliente(texto);
-        void finalizar();
-        return;
+        addBot(t.chatAereo.perguntaClasse);
       }
     },
-    [etapa, adicionarBot, adicionarCliente, finalizar],
+    [etapa, addBot, addCliente],
   );
 
-  /** Botão "Somente ida" na etapa de volta. */
   const escolherSomenteIda = useCallback(() => {
     dados.current.dataVolta = null;
-    adicionarCliente(t.chatAereo.somenteIda);
+    addCliente(t.chatAereo.somenteIda);
     setEtapa('classe');
-    adicionarBot(t.chatAereo.perguntaClasse);
-  }, [adicionarBot, adicionarCliente]);
+    addBot(t.chatAereo.perguntaClasse);
+  }, [addBot, addCliente]);
 
-  /** Escolha de classe (chips) — pede o contato antes de finalizar. */
   const escolherClasse = useCallback(
     (classe: string) => {
       dados.current.classe = classe;
-      adicionarCliente(classe);
-      setEtapa('contato');
-      adicionarBot(t.chatAereo.perguntaContato);
+      addCliente(classe);
+      void finalizar();
     },
-    [adicionarBot, adicionarCliente],
+    [addCliente, finalizar],
   );
 
-  const enviarEntrada = useCallback(() => {
-    const texto = entrada;
-    setEntrada('');
-    responder(texto);
-  }, [entrada, responder]);
+  const enviarChat = useCallback(
+    async (texto: string) => {
+      if (!lead) return;
+      await enviarMensagemCliente(lead.id, lead.token, texto);
+      const msgs = await listarMensagensCliente(lead.id, lead.token);
+      setConversa(msgs);
+    },
+    [lead],
+  );
 
-  // Quais controles aparecem no rodapé conforme a etapa.
-  const mostraCampoTexto =
-    etapa === 'origem' ||
-    etapa === 'destino' ||
-    etapa === 'passageiros' ||
-    etapa === 'nomes' ||
-    etapa === 'ida' ||
-    etapa === 'volta' ||
-    etapa === 'contato';
-  const mostraClasses = etapa === 'classe';
+  const confirmarWhats = useCallback(
+    async (texto: string) => {
+      if (texto.replace(/\D/g, '').length < 10) {
+        addBot(t.chatAereo.erroTelefone);
+        return;
+      }
+      if (lead) {
+        try {
+          await informarWhatsappCliente(lead.id, lead.token, texto);
+        } catch {
+          /* ignora */
+        }
+      }
+      setModoWhats(false);
+      setOpcoesVisiveis(false);
+      addBot(t.chatAereo.whatsConfirmado);
+    },
+    [lead, addBot],
+  );
+
+  const aoSubmeter = useCallback(() => {
+    const texto = entrada.trim();
+    setEntrada('');
+    if (!texto) return;
+    if (etapa === 'conversa') {
+      if (modoWhats) void confirmarWhats(texto);
+      else void enviarChat(texto);
+      return;
+    }
+    responder(texto);
+  }, [entrada, etapa, modoWhats, confirmarWhats, enviarChat, responder]);
+
+  const novaSolicitacao = useCallback(async () => {
+    try {
+      await AsyncStorage.removeItem(CHAVE);
+    } catch {
+      /* ignora */
+    }
+    seq = 0;
+    dados.current = {};
+    setLead(null);
+    setConversa([]);
+    setModoWhats(false);
+    setOpcoesVisiveis(true);
+    setEntrada('');
+    setEtapa('origem');
+    setMensagens([
+      { id: novoId(), autor: 'bot', texto: t.chatAereo.saudacao },
+      { id: novoId(), autor: 'bot', texto: t.chatAereo.perguntaOrigem },
+    ]);
+  }, []);
+
+  const ehConversa = etapa === 'conversa';
+  const mostraInput = ETAPAS_TEXTO.includes(etapa) || ehConversa;
+  const placeholder = ehConversa
+    ? modoWhats
+      ? t.chatAereo.informeWhats
+      : t.chatAereo.placeholderMensagem
+    : t.chatAereo.placeholderResposta;
 
   return (
     <Modal visible={visivel} animationType="slide" transparent onRequestClose={aoFechar}>
       <View style={styles.fundoModal}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.folha}
-        >
-          {/* Cabeçalho do consultor */}
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.folha}>
+          {/* Cabeçalho */}
           <View style={[styles.cabecalho, { paddingTop: insets.top ? insets.top - 4 : 14 }]}>
             <View style={styles.avatar}>
               <Ionicons name="airplane" size={20} color={cores.textoInverso} />
@@ -275,6 +338,11 @@ export function ChatbotAereo({ visivel, aoFechar }: Props) {
                 </Text>
               </View>
             </View>
+            {ehConversa && (
+              <Pressable hitSlop={8} onPress={novaSolicitacao} accessibilityLabel={t.chatAereo.novaSolicitacao}>
+                <Ionicons name="add-circle-outline" size={24} color={cores.textoInverso} />
+              </Pressable>
+            )}
             <Pressable hitSlop={10} onPress={aoFechar} accessibilityLabel={t.chatAereo.fechar}>
               <Ionicons name="close" size={26} color={cores.textoInverso} />
             </Pressable>
@@ -288,13 +356,17 @@ export function ChatbotAereo({ visivel, aoFechar }: Props) {
             showsVerticalScrollIndicator={false}
           >
             {mensagens.map((m) => (
+              <View key={m.id} style={[styles.balao, m.autor === 'bot' ? styles.balaoBot : styles.balaoCliente]}>
+                <Text style={m.autor === 'bot' ? styles.textoBot : styles.textoCliente}>{m.texto}</Text>
+              </View>
+            ))}
+            {conversa.map((m) => (
               <View
                 key={m.id}
-                style={[styles.balao, m.autor === 'bot' ? styles.balaoBot : styles.balaoCliente]}
+                style={[styles.balao, m.autor === 'consultor' ? styles.balaoBot : styles.balaoCliente]}
               >
-                <Text style={m.autor === 'bot' ? styles.textoBot : styles.textoCliente}>
-                  {m.texto}
-                </Text>
+                {m.autor === 'consultor' && <Text style={styles.autorRotulo}>{t.chatAereo.consultorRotulo}</Text>}
+                <Text style={m.autor === 'consultor' ? styles.textoBot : styles.textoCliente}>{m.texto}</Text>
               </View>
             ))}
             {enviando && (
@@ -307,7 +379,7 @@ export function ChatbotAereo({ visivel, aoFechar }: Props) {
 
           {/* Rodapé / entrada */}
           <View style={[styles.rodape, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-            {mostraClasses && (
+            {etapa === 'classe' && (
               <View style={styles.chips}>
                 {t.chatAereo.classes.map((c) => (
                   <Pressable key={c} style={styles.chip} onPress={() => escolherClasse(c)}>
@@ -326,40 +398,46 @@ export function ChatbotAereo({ visivel, aoFechar }: Props) {
               </View>
             )}
 
-            {mostraCampoTexto && (
+            {/* Opções: entrar ou WhatsApp (somente na conversa) */}
+            {ehConversa && opcoesVisiveis && !modoWhats && lead && (
+              <View style={styles.opcoes}>
+                <Text style={styles.opcoesTexto}>{t.chatAereo.ofereceConta}</Text>
+                <View style={styles.chips}>
+                  {!autenticado && (
+                    <Pressable style={styles.chip} onPress={() => router.push('/login')}>
+                      <Ionicons name="person-outline" size={14} color={cores.verde} />
+                      <Text style={styles.chipTexto}>{t.chatAereo.fazerLogin}</Text>
+                    </Pressable>
+                  )}
+                  <Pressable style={styles.chip} onPress={() => setModoWhats(true)}>
+                    <Ionicons name="logo-whatsapp" size={14} color={cores.verde} />
+                    <Text style={styles.chipTexto}>{t.chatAereo.prefiroWhats}</Text>
+                  </Pressable>
+                </View>
+              </View>
+            )}
+
+            {mostraInput && (
               <View style={styles.entradaLinha}>
                 <TextInput
                   style={styles.input}
-                  placeholder={t.chatAereo.placeholderResposta}
+                  placeholder={placeholder}
                   placeholderTextColor={cores.textoClaro}
                   value={entrada}
                   onChangeText={setEntrada}
-                  onSubmitEditing={enviarEntrada}
+                  onSubmitEditing={aoSubmeter}
                   returnKeyType="send"
-                  keyboardType={
-                    etapa === 'passageiros'
-                      ? 'number-pad'
-                      : etapa === 'contato'
-                        ? 'phone-pad'
-                        : 'default'
-                  }
-                  autoFocus={false}
+                  keyboardType={etapa === 'passageiros' ? 'number-pad' : modoWhats ? 'phone-pad' : 'default'}
                 />
                 <Pressable
                   style={[styles.botaoEnviar, !entrada.trim() && styles.botaoEnviarOff]}
-                  onPress={enviarEntrada}
+                  onPress={aoSubmeter}
                   disabled={!entrada.trim()}
                   accessibilityLabel={t.chatAereo.enviar}
                 >
                   <Ionicons name="send" size={18} color={cores.textoInverso} />
                 </Pressable>
               </View>
-            )}
-
-            {etapa === 'final' && (
-              <Pressable style={styles.botaoFechar} onPress={aoFechar}>
-                <Text style={styles.botaoFecharTexto}>{t.chatAereo.fechar}</Text>
-              </Pressable>
             )}
           </View>
         </KeyboardAvoidingView>
@@ -377,7 +455,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: raio.xl,
     overflow: 'hidden',
   },
-
   cabecalho: {
     backgroundColor: cores.azulMarinho,
     flexDirection: 'row',
@@ -386,14 +463,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 14,
   },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 999,
-    backgroundColor: cores.verde,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  avatar: { width: 40, height: 40, borderRadius: 999, backgroundColor: cores.verde, alignItems: 'center', justifyContent: 'center' },
   cabTitulo: { color: cores.textoInverso, fontWeight: '800', fontSize: 16 },
   statusLinha: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
   pontoOnline: { width: 8, height: 8, borderRadius: 999, backgroundColor: cores.verde },
@@ -404,6 +474,7 @@ const styles = StyleSheet.create({
   balao: { maxWidth: '82%', borderRadius: raio.lg, paddingVertical: 10, paddingHorizontal: 14, ...sombra },
   balaoBot: { alignSelf: 'flex-start', backgroundColor: cores.superficie, borderTopLeftRadius: 4 },
   balaoCliente: { alignSelf: 'flex-end', backgroundColor: cores.verde, borderTopRightRadius: 4 },
+  autorRotulo: { color: cores.verde, fontSize: 11, fontWeight: '800', marginBottom: 2 },
   textoBot: { color: cores.texto, fontSize: 14, lineHeight: 20, fontWeight: '500' },
   textoCliente: { color: cores.textoInverso, fontSize: 14, lineHeight: 20, fontWeight: '600' },
   digitando: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -430,7 +501,8 @@ const styles = StyleSheet.create({
     backgroundColor: cores.superficie,
   },
   chipTexto: { color: cores.verde, fontWeight: '800', fontSize: 13 },
-
+  opcoes: { gap: 8 },
+  opcoesTexto: { color: cores.textoSuave, fontSize: 12, fontWeight: '600' },
   entradaLinha: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   input: {
     flex: 1,
@@ -444,21 +516,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  botaoEnviar: {
-    width: 44,
-    height: 44,
-    borderRadius: 999,
-    backgroundColor: cores.verde,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  botaoEnviar: { width: 44, height: 44, borderRadius: 999, backgroundColor: cores.verde, alignItems: 'center', justifyContent: 'center' },
   botaoEnviarOff: { opacity: 0.4 },
-
-  botaoFechar: {
-    backgroundColor: cores.azulMarinho,
-    borderRadius: raio.md,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  botaoFecharTexto: { color: cores.textoInverso, fontWeight: '800', fontSize: 15 },
 });

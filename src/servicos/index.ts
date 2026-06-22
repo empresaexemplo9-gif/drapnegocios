@@ -1,7 +1,14 @@
 export { API_CONFIG, SITE_OFICIAL, TENANT, CONSULTOR } from './config';
 export type { FonteDados } from './config';
-export { notificarInicioAtendimentoAereo, enviarLeadAereo } from './leads';
-export type { LeadAereo } from './leads';
+export { enviarLeadAereo } from './leads';
+export type { LeadAereo, RespostaLead } from './leads';
+export {
+  listarMensagensCliente,
+  enviarMensagemCliente,
+  informarWhatsappCliente,
+  listarMensagens,
+  enviarMensagem,
+} from './chat';
 export { login, registrar, eu } from './auth';
 export type { UsuarioAuth, SessaoAuth } from './auth';
 export { listarLeads, obterLead, atualizarLead } from './leadsConsultor';

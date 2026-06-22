@@ -148,6 +148,14 @@ export interface Lead {
 /** Seção da home onde a oferta aparece. */
 export type SecaoHome = 'destaque' | 'oferta';
 
+/** Mensagem do chat de um lead (cliente ↔ consultor). */
+export interface MensagemChat {
+  id: string;
+  autor: 'cliente' | 'consultor';
+  texto: string;
+  criado_em: string;
+}
+
 /** Oferta da home (gerenciada pelo admin, tabela `home_ofertas`). */
 export interface HomeOferta {
   id: string;

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Image,
   ImageBackground,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,8 +12,10 @@ import {
   View,
 } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { empresa } from '../../src/dados/empresa';
 import { cores, espaco, raio, sombras, tipografia } from '../../src/tema';
 import { t } from '../../src/i18n';
 import { Avatar, BotaoInstalarApp, Cartao, ChatbotAereo, HeroGradiente, LogoMarca, Selo } from '../../src/componentes';
@@ -27,7 +30,7 @@ const ROXO = '#6D4FB0';
 const foto = (seed: string, w = 900) => `https://picsum.photos/seed/vb-${seed}/${w}/${Math.round(w * 0.66)}`;
 
 const CARDS = [
-  { chave: 'onibus', emoji: '🚌', titulo: t.vitrine.onibusTitulo, sub: t.vitrine.onibusSub, cor: cores.verde, selecionado: true },
+  { chave: 'onibus', emoji: '🚌', titulo: t.vitrine.onibusTitulo, sub: t.vitrine.onibusSub, cor: cores.verde },
   { chave: 'aereo', emoji: '✈️', titulo: t.vitrine.aereoTitulo, sub: t.vitrine.aereoSub, cor: cores.azul },
   { chave: 'corporativo', emoji: '💼', titulo: t.vitrine.corporativoTitulo, sub: t.vitrine.corporativoSub, cor: ROXO },
   { chave: 'hospedagem', emoji: '🏨', titulo: t.vitrine.hospedagemTitulo, sub: t.vitrine.hospedagemSub, cor: cores.laranja, emBreve: true },
@@ -75,9 +78,15 @@ const FEATURES = [
   { emoji: '📱', titulo: t.vitrine.seg4Titulo, sub: t.vitrine.seg4Sub },
 ];
 
-const SOCIAL: (keyof typeof Ionicons.glyphMap)[] = ['logo-instagram', 'logo-facebook', 'logo-youtube', 'logo-whatsapp'];
+const SOCIAL: { icone: keyof typeof Ionicons.glyphMap; url: string }[] = [
+  { icone: 'logo-instagram', url: empresa.redes.instagram },
+  { icone: 'logo-facebook', url: empresa.redes.facebook },
+  { icone: 'logo-youtube', url: empresa.redes.youtube },
+  { icone: 'logo-whatsapp', url: empresa.whatsappUrl },
+];
 
 export default function Inicio() {
+  const router = useRouter();
   const alturaBarra = useBottomTabBarHeight();
   const { width } = useWindowDimensions();
   const largoRodape = width >= 900; // distribui o rodapé em colunas no desktop
@@ -118,7 +127,11 @@ export default function Inicio() {
                 <Text style={{ color: cores.verde }}>brasil</Text>
               </Text>
             </View>
-            <Pressable style={styles.faleConosco} hitSlop={6}>
+            <Pressable
+              style={styles.faleConosco}
+              hitSlop={6}
+              onPress={() => Linking.openURL(empresa.whatsappUrl)}
+            >
               <Ionicons name="call" size={16} color={cores.textoInverso} />
               <Text style={styles.faleConoscoTexto}>{t.vitrine.faleConosco}</Text>
             </Pressable>
@@ -143,7 +156,6 @@ export default function Inicio() {
                 key={c.chave}
                 style={[styles.card, c.emBreve && { opacity: 0.85 }]}
                 elevacao="md"
-                destacado={c.selecionado}
                 aoPressionar={
                   c.emBreve
                     ? undefined
@@ -156,7 +168,6 @@ export default function Inicio() {
               >
                 <View style={styles.cardTopo}>
                   <Avatar inicial={c.emoji} tamanho={44} cor={c.cor + '1A'} corConteudo={c.cor} />
-                  {c.selecionado && <Ionicons name="checkmark-circle" size={22} color={cores.verde} />}
                 </View>
                 <View style={styles.cardTituloLinha}>
                   <Text style={[styles.cardTitulo, { color: c.cor }]}>{c.titulo}</Text>
@@ -305,8 +316,8 @@ export default function Inicio() {
                 <Text style={styles.rodapeRotulo}>{t.vitrine.sigaNos}</Text>
                 <View style={styles.social}>
                   {SOCIAL.map((s) => (
-                    <Pressable key={s} hitSlop={8}>
-                      <Ionicons name={s} size={24} color={cores.textoInverso} />
+                    <Pressable key={s.icone} hitSlop={8} onPress={() => Linking.openURL(s.url)}>
+                      <Ionicons name={s.icone} size={24} color={cores.textoInverso} />
                     </Pressable>
                   ))}
                 </View>
@@ -326,7 +337,7 @@ export default function Inicio() {
                   <Text style={styles.rodapeLink}>{t.vitrine.politica}</Text>
                 </Pressable>
                 <Text style={styles.rodapeSep}>·</Text>
-                <Pressable>
+                <Pressable onPress={() => router.push('/termos')}>
                   <Text style={styles.rodapeLink}>{t.vitrine.termos}</Text>
                 </Pressable>
               </View>

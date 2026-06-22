@@ -111,8 +111,19 @@ export const ptBR = {
     direcionando:
       'Vou te direcionar para um consultor para atendê-lo(a) com as melhores opções. 💚',
     encerramento:
-      'Um de nossos consultores já foi avisado e entrará em contato em instantes. Obrigado por escolher a ViajeBrasil!',
+      'Um de nossos consultores já foi avisado e responderá por aqui em instantes. Obrigado por escolher a ViajeBrasil!',
     placeholderResposta: 'Digite sua resposta…',
+    placeholderMensagem: 'Escreva uma mensagem para o consultor…',
+    consultorRotulo: 'Consultor',
+    voceRotulo: 'Você',
+    ofereceConta: 'Quer acompanhar este atendimento? Entre na sua conta, ou prefira ser chamado(a) no WhatsApp:',
+    fazerLogin: 'Entrar / criar conta',
+    prefiroWhats: 'Prefiro WhatsApp',
+    informeWhats: 'Seu WhatsApp com DDD',
+    whatsConfirmado: 'Pronto! O consultor poderá te chamar no WhatsApp também. 📲',
+    novaSolicitacao: 'Nova solicitação',
+    retomando: 'Retomando seu atendimento. Veja as mensagens abaixo. 👇',
+    semBackend: 'Atendimento indisponível no momento. Tente novamente mais tarde.',
     enviar: 'Enviar',
     erroEnvio:
       'Tivemos um problema para avisar o consultor agora, mas seus dados foram registrados — ele entrará em contato assim que possível.',
@@ -250,6 +261,11 @@ export const ptBR = {
     semWhatsapp: 'Telefone inválido para WhatsApp',
     atualizarStatus: 'Atualizar status',
     salvo: 'Status atualizado!',
+    conversa: 'Conversa com o cliente',
+    semMensagens: 'Sem mensagens ainda — diga olá ao cliente.',
+    placeholderMsg: 'Escreva uma mensagem…',
+    voce: 'Você',
+    cliente: 'Cliente',
     saudacaoWpp: (nome: string) =>
       `Olá ${nome}! Sou consultor da ViajeBrasil e recebi seu pedido de passagem aérea. Vou te ajudar com as melhores opções. 😊`,
   },

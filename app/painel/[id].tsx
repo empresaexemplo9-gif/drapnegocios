@@ -1,12 +1,27 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Linking,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { cores, espaco, tipografia } from '../../src/tema';
+import { cores, espaco, raio, tipografia } from '../../src/tema';
 import { t } from '../../src/i18n';
 import { Botao, Cartao, Chip, Selo, tomStatusLead } from '../../src/componentes';
-import { atualizarLead, linkWhatsApp, obterLead } from '../../src/servicos';
-import type { Lead, StatusLead } from '../../src/tipos';
+import {
+  atualizarLead,
+  enviarMensagem,
+  linkWhatsApp,
+  listarMensagens,
+  obterLead,
+} from '../../src/servicos';
+import type { Lead, MensagemChat, StatusLead } from '../../src/tipos';
 
 const STATUSES: StatusLead[] = ['novo', 'atribuido', 'em_atendimento', 'convertido', 'perdido'];
 
@@ -25,6 +40,8 @@ export default function DetalheLead() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
+  const [mensagens, setMensagens] = useState<MensagemChat[]>([]);
+  const [textoChat, setTextoChat] = useState('');
 
   useEffect(() => {
     let ativo = true;
@@ -42,6 +59,42 @@ export default function DetalheLead() {
       ativo = false;
     };
   }, [id]);
+
+  // Polling das mensagens do chat.
+  useEffect(() => {
+    if (!id) return;
+    let ativo = true;
+    const buscar = async () => {
+      try {
+        const msgs = await listarMensagens(String(id));
+        if (ativo) setMensagens(msgs);
+      } catch {
+        /* ignora */
+      }
+    };
+    void buscar();
+    const tid = setInterval(buscar, 4000);
+    return () => {
+      ativo = false;
+      clearInterval(tid);
+    };
+  }, [id]);
+
+  const enviarChat = useCallback(async () => {
+    const texto = textoChat.trim();
+    if (!texto) return;
+    setTextoChat('');
+    try {
+      await enviarMensagem(String(id), texto);
+      const msgs = await listarMensagens(String(id));
+      setMensagens(msgs);
+      setLead((prev) => (prev && prev.status !== 'em_atendimento' && (prev.status === 'novo' || prev.status === 'atribuido')
+        ? { ...prev, status: 'em_atendimento' }
+        : prev));
+    } catch {
+      /* ignora */
+    }
+  }, [id, textoChat]);
 
   const mudarStatus = useCallback(
     async (status: StatusLead) => {
@@ -117,6 +170,44 @@ export default function DetalheLead() {
         ))}
       </View>
       {salvando ? <ActivityIndicator color={cores.verde} style={{ marginTop: espaco.sm }} /> : null}
+
+      {/* Chat com o cliente */}
+      <Text style={styles.secao}>{t.painel.conversa}</Text>
+      <Cartao elevacao="sm" style={{ gap: espaco.sm }}>
+        {mensagens.length === 0 ? (
+          <Text style={styles.aviso}>{t.painel.semMensagens}</Text>
+        ) : (
+          mensagens.map((m) => (
+            <View
+              key={m.id}
+              style={[styles.msg, m.autor === 'consultor' ? styles.msgConsultor : styles.msgCliente]}
+            >
+              <Text style={styles.msgAutor}>{m.autor === 'consultor' ? t.painel.voce : t.painel.cliente}</Text>
+              <Text style={m.autor === 'consultor' ? styles.msgTextoConsultor : styles.msgTextoCliente}>
+                {m.texto}
+              </Text>
+            </View>
+          ))
+        )}
+      </Cartao>
+      <View style={styles.entradaLinha}>
+        <TextInput
+          style={styles.input}
+          value={textoChat}
+          onChangeText={setTextoChat}
+          placeholder={t.painel.placeholderMsg}
+          placeholderTextColor={cores.textoClaro}
+          onSubmitEditing={enviarChat}
+          returnKeyType="send"
+        />
+        <Pressable
+          style={[styles.botaoEnviar, !textoChat.trim() && { opacity: 0.4 }]}
+          onPress={enviarChat}
+          disabled={!textoChat.trim()}
+        >
+          <Ionicons name="send" size={18} color={cores.textoInverso} />
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }
@@ -136,4 +227,23 @@ const styles = StyleSheet.create({
   semWppTexto: { ...tipografia.corpoSuave, color: cores.textoSuave },
   secao: { ...tipografia.secao, color: cores.azulMarinho },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.sm },
+  msg: { maxWidth: '85%', borderRadius: raio.md, paddingVertical: 8, paddingHorizontal: 12 },
+  msgConsultor: { alignSelf: 'flex-end', backgroundColor: cores.verde },
+  msgCliente: { alignSelf: 'flex-start', backgroundColor: cores.superficieAlt },
+  msgAutor: { fontSize: 10, fontWeight: '800', opacity: 0.7, marginBottom: 2, color: cores.azulMarinho },
+  msgTextoConsultor: { ...tipografia.corpoSuave, color: cores.textoInverso },
+  msgTextoCliente: { ...tipografia.corpoSuave, color: cores.texto },
+  entradaLinha: { flexDirection: 'row', alignItems: 'center', gap: espaco.sm },
+  input: {
+    flex: 1,
+    backgroundColor: cores.superficie,
+    borderWidth: 1,
+    borderColor: cores.borda,
+    borderRadius: raio.pill,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    color: cores.texto,
+    ...tipografia.corpoSuave,
+  },
+  botaoEnviar: { width: 44, height: 44, borderRadius: 999, backgroundColor: cores.verde, alignItems: 'center', justifyContent: 'center' },
 });
