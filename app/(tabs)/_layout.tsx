@@ -2,6 +2,7 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Text, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cores, alturaBarraAbas } from '../../src/tema';
 import { t } from '../../src/i18n';
 import { useCarrinho } from '../../src/contextos/CarrinhoContext';
@@ -10,6 +11,7 @@ type Icone = keyof typeof Ionicons.glyphMap;
 
 export default function LayoutAbas() {
   const { itens } = useCarrinho();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -20,11 +22,14 @@ export default function LayoutAbas() {
         tabBarStyle: {
           backgroundColor: cores.superficie,
           borderTopColor: cores.borda,
-          height: alturaBarraAbas,
-          paddingBottom: 8,
+          // Altura considera a área segura inferior (notch/home indicator).
+          height: alturaBarraAbas + insets.bottom + 8,
+          paddingBottom: insets.bottom + 10,
           paddingTop: 8,
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
+        // lineHeight evita o corte do texto da label.
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700', lineHeight: 15 },
+        tabBarIconStyle: { marginTop: 2 },
       }}
     >
       <Tabs.Screen
