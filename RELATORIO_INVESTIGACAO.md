@@ -150,6 +150,21 @@ commit;
 
 ---
 
+## 8. Conclusão final (após coleta do site via navegador)
+
+Coleta do site `viajebrasilpassagens.com.br` feita por agente com navegador (só conteúdo público):
+
+- **Não é Vercel/Next/Supabase.** É **site estático servido por Apache** (`server: Apache`, sem `x-vercel-id`/`x-powered-by`), CSS/JS inline, 2 páginas (`/`, `/ajuda.html`), um `newsletter.php` (PHP). **Sem `/_next/`, sem bundles externos, sem source maps.**
+- **Fingerprints fortes:** **zero** (no site e no repo).
+- **Hashes de assets:** **nenhum** dos 11 meus bate com os do site.
+- **Textos de marketing:** 4 frases batem **no site** ("Maior Oferta de Linhas", "Por que viajar com a ViajeBrasil?", "Receba ofertas exclusivas!", "Compre sua passagem onde estiver pelo nosso aplicativo gratuito.") — evidência **média/fraca** (copy de passagens é parcialmente genérica; pode ser material oficial da empresa). Minha paleta **não** aparece (o site usa `#0d2240/#2eb82e/#6b3fa0`).
+- **Marca:** "ViajeBrasil" + CNPJ + WhatsApp presentes no site — **fraco** (provável site legítimo da empresa).
+- **Supabase ref `hdyyunheifjheunlgcmr`:** confirmada **NÃO‑minha** (meu repo nunca teve ref Supabase real; uso Neon). É chave do projeto do outro repo, não há vínculo com meu backend.
+
+**Veredito:** **não há prova técnica de cópia do meu código** em nenhum dos alvos. O único ponto de contato é **marca + algumas frases de marketing no site** — que, sendo `viajebrasilpassagens.com.br` o **site oficial referenciado no meu próprio código**, é plausivelmente legítimo. Um DMCA/abuse com este conjunto teria **base fraca**. Próximo passo só faz sentido se existir **outro alvo** (subdomínio/deploy Vercel/app real) que reproduza o meu app — aí refaço a varredura.
+
+---
+
 ## Anexos (pasta `evidencias/`)
 - `hashes_assets.txt` — SHA‑256 dos meus assets customizados (base de comparação).
 - `fingerprints_textos.txt`, `fingerprints_cores.txt`, `fingerprints_backend.txt` — assinaturas para procurar.
