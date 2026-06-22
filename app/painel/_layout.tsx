@@ -29,6 +29,7 @@ export default function LayoutPainel() {
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="[id]" options={{ title: '' }} />
+      <Stack.Screen name="atendimento/[id]" options={{ title: '' }} />
     </Stack>
   );
 }

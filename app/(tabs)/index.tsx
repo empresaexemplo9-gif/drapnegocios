@@ -130,9 +130,9 @@ export default function Inicio() {
             <Pressable
               style={styles.faleConosco}
               hitSlop={6}
-              onPress={() => Linking.openURL(empresa.whatsappUrl)}
+              onPress={() => router.push('/atendimento')}
             >
-              <Ionicons name="call" size={16} color={cores.textoInverso} />
+              <Ionicons name="chatbubbles" size={16} color={cores.textoInverso} />
               <Text style={styles.faleConoscoTexto}>{t.vitrine.faleConosco}</Text>
             </Pressable>
           </View>

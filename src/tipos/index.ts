@@ -148,12 +148,29 @@ export interface Lead {
 /** Seção da home onde a oferta aparece. */
 export type SecaoHome = 'destaque' | 'oferta';
 
-/** Mensagem do chat de um lead (cliente ↔ consultor). */
+/** Mensagem do chat de um lead/atendimento (cliente ↔ consultor). */
 export interface MensagemChat {
   id: string;
   autor: 'cliente' | 'consultor';
   texto: string;
   criado_em: string;
+}
+
+/** Status de um atendimento geral (espelha o CHECK da tabela `atendimentos`). */
+export type StatusAtendimento = 'novo' | 'em_atendimento' | 'resolvido';
+
+/**
+ * Atendimento geral (chat livre cliente ↔ consultor, tabela `atendimentos`).
+ * Distribuição ISOLADA dos leads aéreos (usa `consultores.carga_geral`).
+ */
+export interface Atendimento {
+  id: string;
+  status: StatusAtendimento;
+  consultor_id: string | null;
+  criado_em: string;
+  ultima_mensagem: string | null;
+  ultimo_autor: 'cliente' | 'consultor' | null;
+  ultima_em: string | null;
 }
 
 /** Oferta da home (gerenciada pelo admin, tabela `home_ofertas`). */

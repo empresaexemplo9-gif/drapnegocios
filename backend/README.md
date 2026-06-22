@@ -19,6 +19,15 @@ Tudo roda **na própria Vercel**, no mesmo projeto que publica o app web:
 4. O consultor vê o lead na **área interna** (`/painel`) e responde pelo chat.
 5. (Opcional) o cliente informa o **WhatsApp** — o consultor vê o botão `wa.me`.
 
+### Atendimento geral (fila isolada)
+
+A aba **Atendimento** (e o botão **"Fale Conosco"** da home) abrem um chat
+**livre**: o cliente manda qualquer dúvida e ela cai numa **fila própria**,
+**isolada** dos leads aéreos. A distribuição usa `consultores.carga_geral`
+(round-robin separado). O consultor vê esses atendimentos em `/painel` na aba
+**"Atendimento geral"**. Quem preferir pode ser atendido pelo **WhatsApp**
+(botão no próprio chat — exceção).
+
 ## Endpoints (Vercel Functions)
 
 | Endpoint | Método | Quem | O quê |
@@ -27,6 +36,8 @@ Tudo roda **na própria Vercel**, no mesmo projeto que publica o app web:
 | `/api/chat/[id]` | GET/POST | cliente (`?token=&tenantId=`) ou consultor/admin (JWT) | lista/envia mensagens; `POST {telefone}` informa WhatsApp |
 | `/api/leads` | GET | consultor/admin | lista (consultor: os seus; admin: todos) |
 | `/api/leads/[id]` | GET/PATCH | consultor/admin | detalhe; muda status / reatribui (admin) |
+| `/api/atendimentos` | POST/GET | público (POST) · consultor/admin (GET) | cria atendimento geral → `{ atendimentoId, clienteToken }`; lista os seus |
+| `/api/atendimentos/[id]` | GET/POST | cliente (`?token=&tenantId=`) ou consultor/admin (JWT) | lista/envia mensagens; `POST {status}` (staff) marca resolvido |
 | `/api/auth/{login,register,me}` | POST/GET | público / Bearer | login, cadastro (cliente), rehidratação |
 | `/api/admin/stats` | GET | admin | métricas |
 | `/api/admin/ofertas` | GET/POST/PATCH/DELETE | admin | CRUD das ofertas da home |
@@ -40,8 +51,12 @@ continua valendo**. Nunca se confia em `papel`/`tenant_id` do cliente.
 ## Migrações (rodar no SQL Editor do Neon, em ordem)
 
 `001_tenant_rls` → `002_rota_aereo` → `003_auth` → `004_home_ofertas`
-→ `006_home_secao` → `007_chat`. `005_seed_exemplo.sql` é um **template**
-(edite e-mails/senhas) para criar admin e consultores de teste.
+→ `006_home_secao` → `007_chat` → `008_atendimentos`. `005_seed_exemplo.sql`
+é um **template** (edite e-mails/senhas) para criar admin e consultores de teste.
+
+> `008_atendimentos.sql` cria a fila do **atendimento geral** (chat livre), com
+> distribuição ISOLADA dos leads aéreos: usa o contador `consultores.carga_geral`
+> (round-robin próprio) e as tabelas `atendimentos` / `atendimento_mensagens`.
 
 ## Variáveis de ambiente (server-side, SÓ na Vercel)
 

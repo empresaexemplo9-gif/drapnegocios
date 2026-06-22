@@ -18,12 +18,29 @@ export const ptBR = {
     eyebrow: 'Fale com a gente',
     titulo: 'Atendimento',
     sub: 'Tire dúvidas e receba as melhores opções de um consultor.',
-    emAndamento: 'Você tem um atendimento em andamento',
-    emAndamentoSub: 'Continue a conversa com o consultor de onde parou.',
-    nenhuma: 'Comece um atendimento',
-    nenhumaSub: 'Conte sua viagem e um consultor te responde por aqui.',
-    abrir: 'Abrir conversa',
-    iniciar: 'Iniciar atendimento',
+    // Cabeçalho do chat
+    chatTitulo: 'Atendimento',
+    chatSub: 'Atendimento ViajeBrasil',
+    online: 'online agora',
+    // Estado inicial (compor a 1ª mensagem)
+    saudacao:
+      'Olá! 👋 Como podemos ajudar? Escreva sua dúvida — sobre passagens, hospedagem, pacotes ou qualquer outra coisa — e um consultor responde por aqui.',
+    placeholderPrimeira: 'Escreva sua mensagem…',
+    placeholderMensagem: 'Escreva uma mensagem para o consultor…',
+    enviar: 'Enviar',
+    enviando: 'Enviando…',
+    // Após criar o atendimento
+    encaminhado:
+      'Recebemos sua mensagem! Um de nossos consultores já foi avisado e responderá por aqui em instantes. 💚',
+    consultorRotulo: 'Consultor',
+    retomando: 'Retomando seu atendimento. Veja as mensagens abaixo. 👇',
+    semBackend: 'Atendimento indisponível no momento. Tente novamente mais tarde.',
+    // Opção de WhatsApp (exceção)
+    ofereceWhats: 'Prefere ser atendido(a) pelo WhatsApp?',
+    prefiroWhats: 'Falar no WhatsApp',
+    whatsTexto: 'Olá! Vim pelo app ViajeBrasil e gostaria de atendimento. 😊',
+    novoAtendimento: 'Novo atendimento',
+    fechar: 'Fechar',
   },
   categorias: {
     onibus: 'Ônibus',
@@ -253,12 +270,28 @@ export const ptBR = {
     convertido: 'Convertido',
     perdido: 'Perdido',
   },
+  statusAtendimento: {
+    novo: 'Novo',
+    em_atendimento: 'Em atendimento',
+    resolvido: 'Resolvido',
+  },
   painel: {
     titulo: 'Meus leads',
     subtitulo: 'Atendimentos de Passagens Aéreas',
     vazio: 'Nenhum lead por aqui ainda.',
     carregando: 'Carregando leads…',
     erro: 'Não foi possível carregar os leads.',
+    // Alternância entre as duas filas (isoladas)
+    abaLeads: 'Passagens aéreas',
+    abaAtendimentos: 'Atendimento geral',
+    vazioAtendimentos: 'Nenhum atendimento por aqui ainda.',
+    carregandoAtendimentos: 'Carregando atendimentos…',
+    erroAtendimentos: 'Não foi possível carregar os atendimentos.',
+    semMensagemAinda: 'Sem mensagens ainda',
+    tituloAtendimento: 'Atendimento',
+    marcarResolvido: 'Marcar como resolvido',
+    reabrir: 'Reabrir atendimento',
+    resolvido: 'Atendimento resolvido',
     voltar: 'Voltar',
     detalhe: 'Lead',
     trecho: 'Trecho',
@@ -286,6 +319,7 @@ export const ptBR = {
   admin: {
     titulo: 'Administração',
     abreLeads: 'Ver leads',
+    abreAtendimentos: 'Atendimentos',
     abreOfertas: 'Ofertas da home',
     total: 'Leads no total',
     convertidos: 'Convertidos',

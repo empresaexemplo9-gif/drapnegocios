@@ -77,6 +77,10 @@ export default function PainelAdmin() {
               <Ionicons name="list" size={18} color={cores.verde} />
               <Text style={styles.acaoTexto}>{t.admin.abreLeads}</Text>
             </Pressable>
+            <Pressable style={styles.acao} onPress={() => router.push('/painel?aba=atendimentos')}>
+              <Ionicons name="chatbubbles" size={18} color={cores.verde} />
+              <Text style={styles.acaoTexto}>{t.admin.abreAtendimentos}</Text>
+            </Pressable>
             <Pressable style={styles.acao} onPress={() => router.push('/admin/ofertas')}>
               <Ionicons name="pricetags" size={18} color={cores.verde} />
               <Text style={styles.acaoTexto}>{t.admin.abreOfertas}</Text>

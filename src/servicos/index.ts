@@ -9,6 +9,16 @@ export {
   listarMensagens,
   enviarMensagem,
 } from './chat';
+export {
+  criarAtendimento,
+  listarMensagensAtendimentoCliente,
+  enviarMensagemAtendimentoCliente,
+  listarAtendimentos,
+  listarMensagensAtendimento,
+  enviarMensagemAtendimento,
+  mudarStatusAtendimento,
+} from './atendimento';
+export type { RespostaAtendimento } from './atendimento';
 export { login, registrar, eu } from './auth';
 export type { UsuarioAuth, SessaoAuth } from './auth';
 export { listarLeads, obterLead, atualizarLead } from './leadsConsultor';
