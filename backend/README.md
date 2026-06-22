@@ -101,9 +101,51 @@ psql "$DATABASE_URL" -f sql/001_tenant_rls.sql
 # Neon/Supabase: cole o conteúdo no SQL Editor e rode.
 ```
 
-## Política de distribuição entre consultores
+## Distribuição entre consultores (round-robin)
 
-**A definir.** O lead nasce sem `consultor_id`; a regra de qual consultor recebe
-(rodízio, por região, disponibilidade…) será implementada depois. A coluna
-`status` já acompanha o ciclo (`novo → atribuido → em_atendimento →
-convertido/perdido`).
+Implementada em `api/leads-aereo.ts` → `registrarLead()`: ao gravar o lead,
+escolhe o **consultor ativo menos carregado** (`order by consultores.carga`),
+seta `consultor_id` + `status='atribuido'` e incrementa a `carga` — tudo numa
+única instrução (CTEs) na mesma transação RLS. Sem consultor ativo, o lead
+nasce `novo`/sem consultor e o e-mail vai para `CONSULTOR_EMAIL`. O e-mail é
+endereçado ao consultor atribuído quando houver.
+
+## Autenticação e papéis (custom, JWT)
+
+Login real por e-mail/senha nas Functions (`api/auth/*`), com **bcrypt**
+(`bcryptjs`) e **JWT** (`jsonwebtoken`, HS256, claim `{ sub, tenant_id, papel }`).
+`usuarios` é a tabela única de login (papéis `cliente | consultor | admin`);
+`consultores` referencia um `usuario` (`usuario_id`) e guarda a `carga` do
+round-robin.
+
+| Endpoint | Método | Quem | O quê |
+|---|---|---|---|
+| `/api/auth/login` | POST | público | e-mail/senha → `{ token, usuario }` |
+| `/api/auth/register` | POST | público | auto-cadastro (sempre `cliente`) |
+| `/api/auth/me` | GET | Bearer | rehidrata o usuário do token |
+| `/api/leads` | GET | consultor/admin | lista (consultor: os seus; admin: todos) |
+| `/api/leads/[id]` | GET/PATCH | consultor/admin | detalhe; muda status / reatribui (admin) |
+| `/api/admin/stats` | GET | admin | métricas (status, conversão, carga) |
+| `/api/admin/ofertas` | GET/POST/PATCH/DELETE | admin | CRUD das ofertas da home |
+| `/api/home/ofertas` | GET | público | ofertas ativas da home |
+
+Toda Function protegida verifica o JWT (`api/_lib/auth.ts`) e seta o tenant a
+partir do claim (`api/_lib/db.ts → comTenant`) — RLS continua valendo. Nunca se
+confia em `papel`/`tenant_id` vindos do cliente.
+
+## Migrações (ordem) e variáveis
+
+Rode no SQL Editor do Neon, em ordem: `001` → `002` → `003_auth` → `004_home_ofertas`.
+`005_seed_exemplo.sql` é um **template** (edite e-mails/senhas) para criar um
+admin e consultores de teste.
+
+Novo env **server-side**: `JWT_SECRET` (segredo forte para assinar os JWTs).
+Os demais (`DATABASE_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, `CONSULTOR_EMAIL`,
+`NOTIFY_ON_START`) seguem como antes. O app não recebe nenhum desses.
+
+### Aplicar a migração manualmente
+
+```bash
+psql "$DATABASE_URL" -f sql/001_tenant_rls.sql
+# Neon/Supabase: cole o conteúdo no SQL Editor e rode.
+```

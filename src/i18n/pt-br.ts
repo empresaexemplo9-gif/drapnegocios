@@ -32,6 +32,8 @@ export const ptBR = {
   },
   vitrine: {
     passagens: 'Passagens',
+    heroTitulo: 'Sua próxima viagem começa aqui',
+    heroSub: 'Passagens de ônibus e aéreas, hospedagem e pacotes pelo Brasil inteiro.',
     faleConosco: 'Fale Conosco',
     perguntaA: 'O que você ',
     perguntaB: 'deseja buscar?',
