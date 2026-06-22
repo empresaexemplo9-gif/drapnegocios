@@ -16,6 +16,7 @@ export {
 export { obterEstatisticas } from './admin';
 export type { EstatisticasAdmin } from './admin';
 export { linkWhatsApp } from './whatsapp';
+export { enviarFotoOferta } from './upload';
 export { linkCheckoutOficial, abrirCheckoutOficial, linkWhiteLabel, abrirWhiteLabel } from './site';
 export { ErroApi, requisitar } from './cliente';
 export { ENDPOINTS } from './endpoints';

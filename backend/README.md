@@ -143,6 +143,14 @@ Novo env **server-side**: `JWT_SECRET` (segredo forte para assinar os JWTs).
 Os demais (`DATABASE_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, `CONSULTOR_EMAIL`,
 `NOTIFY_ON_START`) seguem como antes. O app não recebe nenhum desses.
 
+### Upload de imagens das ofertas (Vercel Blob)
+
+O admin pode **enviar fotos** das ofertas (`/admin/ofertas` → "Enviar foto"), que vão
+para o **Vercel Blob** via `api/admin/upload.ts` (somente admin). Para habilitar:
+crie um **Blob store** na Vercel (Storage → Blob) e conecte ao projeto — isso injeta
+`BLOB_READ_WRITE_TOKEN` automaticamente nas Functions. Sem o store, o upload retorna
+erro amigável e o campo de **URL** continua funcionando (cole o link da imagem).
+
 ### Aplicar a migração manualmente
 
 ```bash
