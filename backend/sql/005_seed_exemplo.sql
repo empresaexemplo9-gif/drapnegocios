@@ -6,7 +6,8 @@
 begin;
 
 -- Ativa o tenant corrente (RLS) para todas as escritas abaixo.
-select set_config('app.current_tenant', (select id from tenants where slug = 'viajebrasil'), true);
+-- (id::text — set_config espera texto; uuid puro não casa na assinatura.)
+select set_config('app.current_tenant', (select id::text from tenants where slug = 'viajebrasil'), true);
 
 -- ADMIN ---------------------------------------------------------------------
 insert into usuarios (tenant_id, email, papel, nome, ativo, password_hash)
