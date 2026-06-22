@@ -16,19 +16,19 @@ export const URLS_DESTINOS: Record<string, string> = {
   // Demais destinos — Wikimedia Commons (uso livre; créditos ao lado).
   // Fortaleza – Praia de Iracema — Mayra P. Munerato / CC BY-SA 3.0
   fortaleza:
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Praia_de_Iracema_-_Fortaleza_CE.jpg/1920px-Praia_de_Iracema_-_Fortaleza_CE.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Praia_de_Iracema_-_Fortaleza_CE.jpg/1280px-Praia_de_Iracema_-_Fortaleza_CE.jpg',
   // Recife – Marco Zero / Recife Antigo — Hans von Manteuffel / CC BY-SA 4.0
   recife:
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Bairro_de_Recife_Antigo_com_Marco_Zero.jpg/1920px-Bairro_de_Recife_Antigo_com_Marco_Zero.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Bairro_de_Recife_Antigo_com_Marco_Zero.jpg/1280px-Bairro_de_Recife_Antigo_com_Marco_Zero.jpg',
   // Foz do Iguaçu – Cataratas — Esin Üstün / CC BY 2.0
   'foz-do-iguacu':
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Iguazu_Falls-_Brazil_%2814858965267%29.jpg/1920px-Iguazu_Falls-_Brazil_%2814858965267%29.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Iguazu_Falls-_Brazil_%2814858965267%29.jpg/1280px-Iguazu_Falls-_Brazil_%2814858965267%29.jpg',
   // Natal – Ponte Newton Navarro — Marinelson Almeida / CC BY 2.0
   natal:
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Ponte_Newton_Navarro_-_Natal_-_Brasil_%2833616371311%29.jpg/1920px-Ponte_Newton_Navarro_-_Natal_-_Brasil_%2833616371311%29.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Ponte_Newton_Navarro_-_Natal_-_Brasil_%2833616371311%29.jpg/1280px-Ponte_Newton_Navarro_-_Natal_-_Brasil_%2833616371311%29.jpg',
   // Gramado – Centro — Augusto Janiski Junior / CC BY 2.0
   gramado:
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/GRAMADO_-_RIO_GRANDE_DO_SUL_-_BRASIL_BY_AUGUSTO_JANISCKI_JUNIOR_%2814445422406%29.jpg/1920px-GRAMADO_-_RIO_GRANDE_DO_SUL_-_BRASIL_BY_AUGUSTO_JANISCKI_JUNIOR_%2814445422406%29.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/GRAMADO_-_RIO_GRANDE_DO_SUL_-_BRASIL_BY_AUGUSTO_JANISCKI_JUNIOR_%2814445422406%29.jpg/1280px-GRAMADO_-_RIO_GRANDE_DO_SUL_-_BRASIL_BY_AUGUSTO_JANISCKI_JUNIOR_%2814445422406%29.jpg',
 };
 
 /** URL real do destino, com fallback gracioso (Lorem Picsum) por slug. */
