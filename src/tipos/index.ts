@@ -1,5 +1,5 @@
-/** Papel do usuário autenticado (definido pelo backend no modo `api`). */
-export type Papel = 'admin' | 'cliente';
+/** Papel do usuário autenticado (definido pelo backend). */
+export type Papel = 'admin' | 'cliente' | 'consultor';
 
 /** Categorias de produto vendidas no app. */
 export type Categoria =

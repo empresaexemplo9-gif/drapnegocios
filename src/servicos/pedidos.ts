@@ -10,7 +10,7 @@ import type { ItemReserva, Papel } from '../tipos';
 import { API_CONFIG } from './config';
 import { requisitar } from './cliente';
 import { ENDPOINTS } from './endpoints';
-import { definirToken } from './sessao';
+import { login as autenticarLogin } from './auth';
 
 export type FormaPagamento = 'pix' | 'cartao' | 'boleto';
 
@@ -60,18 +60,10 @@ export interface SessaoUsuario {
   usuario: { nome: string; email: string; papel: Papel };
 }
 
-/** Autentica por e-mail/senha. */
+/**
+ * Autentica por e-mail/senha. Delega ao serviço de auth (Vercel Functions,
+ * mesma origem), que já cuida do token e do papel real.
+ */
 export async function autenticar(email: string, senha: string): Promise<SessaoUsuario> {
-  if (API_CONFIG.fonte === 'api') {
-    const sessao = await requisitar<SessaoUsuario>(ENDPOINTS.auth.login, {
-      method: 'POST',
-      body: JSON.stringify({ email, senha }),
-    });
-    await definirToken(sessao.token || null);
-    return sessao;
-  }
-  // Mock: autentica como cliente (o papel real é definido pelo backend no modo `api`).
-  const nome = email.split('@')[0] ?? 'Viajante';
-  const papel: Papel = 'cliente';
-  return { token: 'mock-token', usuario: { nome, email, papel } };
+  return autenticarLogin(email, senha);
 }

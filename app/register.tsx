@@ -7,28 +7,29 @@ import { cores, espaco, tipografia } from '../src/tema';
 import { t } from '../src/i18n';
 import { Botao, Campo, LogoMarca } from '../src/componentes';
 import { useAutenticacao } from '../src/contextos/AutenticacaoContext';
-import { autenticar } from '../src/servicos';
+import { registrar } from '../src/servicos';
 
-export default function Login() {
+export default function Cadastro() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { entrar } = useAutenticacao();
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [entrando, setEntrando] = useState(false);
+  const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState('');
 
-  const aoEntrar = async () => {
+  const aoCriar = async () => {
     setErro('');
-    setEntrando(true);
+    setEnviando(true);
     try {
-      const sessao = await autenticar(email.trim(), senha);
+      const sessao = await registrar(nome.trim(), email.trim(), senha);
       entrar(sessao.usuario.email, sessao.usuario.papel, sessao.usuario.nome);
       router.back();
-    } catch {
-      setErro(t.login.erro);
+    } catch (e) {
+      setErro(e instanceof Error && e.message ? e.message : t.cadastro.erro);
     } finally {
-      setEntrando(false);
+      setEnviando(false);
     }
   };
 
@@ -40,15 +41,23 @@ export default function Login() {
 
       <View style={styles.conteudo}>
         <View style={styles.marca}>
-          <LogoMarca tamanho={88} comTexto />
+          <LogoMarca tamanho={72} comTexto />
         </View>
 
-        <Text style={styles.titulo}>{t.login.titulo}</Text>
-        <Text style={styles.subtitulo}>{t.login.subtitulo}</Text>
+        <Text style={styles.titulo}>{t.cadastro.titulo}</Text>
+        <Text style={styles.subtitulo}>{t.cadastro.subtitulo}</Text>
 
         <Campo
+          icone="person-outline"
+          placeholder={t.cadastro.nome}
+          autoCapitalize="words"
+          value={nome}
+          onChangeText={setNome}
+          containerStyle={styles.campo}
+        />
+        <Campo
           icone="mail-outline"
-          placeholder={t.login.email}
+          placeholder={t.cadastro.email}
           keyboardType="email-address"
           autoCapitalize="none"
           value={email}
@@ -57,7 +66,7 @@ export default function Login() {
         />
         <Campo
           icone="lock-closed-outline"
-          placeholder={t.login.senha}
+          placeholder={t.cadastro.senha}
           secureTextEntry
           value={senha}
           onChangeText={setSenha}
@@ -66,22 +75,18 @@ export default function Login() {
 
         {erro ? <Text style={styles.erro}>{erro}</Text> : null}
 
-        <Pressable style={styles.esqueci} hitSlop={8}>
-          <Text style={styles.esqueciTexto}>{t.login.esqueci}</Text>
-        </Pressable>
-
         <Botao
-          titulo={t.login.entrar}
+          titulo={t.cadastro.criar}
           variante="destaque"
-          aoPressionar={aoEntrar}
-          carregando={entrando}
-          estilo={{ alignSelf: 'stretch' }}
+          aoPressionar={aoCriar}
+          carregando={enviando}
+          estilo={{ alignSelf: 'stretch', marginTop: espaco.sm }}
         />
 
         <View style={styles.rodape}>
-          <Text style={styles.rodapeTexto}>{t.login.semConta} </Text>
-          <Pressable hitSlop={6} onPress={() => router.push('/register')}>
-            <Text style={styles.rodapeLink}>{t.login.criarConta}</Text>
+          <Text style={styles.rodapeTexto}>{t.cadastro.jaTenho} </Text>
+          <Pressable hitSlop={6} onPress={() => router.replace('/login')}>
+            <Text style={styles.rodapeLink}>{t.cadastro.entrar}</Text>
           </Pressable>
         </View>
       </View>
@@ -94,7 +99,7 @@ const styles = StyleSheet.create({
   fechar: { position: 'absolute', right: 16, zIndex: 2 },
   conteudo: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: espaco.md },
   marca: { alignItems: 'center' },
-  titulo: { ...tipografia.titulo, color: cores.azulMarinho, marginTop: espaco.lg, textAlign: 'center' },
+  titulo: { ...tipografia.titulo, color: cores.azulMarinho, marginTop: espaco.md, textAlign: 'center' },
   subtitulo: {
     ...tipografia.corpoSuave,
     color: cores.textoSuave,
@@ -103,8 +108,6 @@ const styles = StyleSheet.create({
   },
   campo: { alignSelf: 'stretch' },
   erro: { ...tipografia.corpoSuave, color: cores.erro, textAlign: 'center' },
-  esqueci: { alignSelf: 'flex-end' },
-  esqueciTexto: { ...tipografia.legenda, color: cores.azul },
   rodape: { flexDirection: 'row', justifyContent: 'center', marginTop: espaco.lg },
   rodapeTexto: { color: cores.textoSuave, fontWeight: '500' },
   rodapeLink: { color: cores.verde, fontWeight: '800' },

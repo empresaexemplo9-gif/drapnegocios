@@ -9,6 +9,7 @@ import React, {
 
 import type { Papel } from '../tipos';
 import { carregarTokenPersistido, definirToken } from '../servicos/sessao';
+import { eu } from '../servicos/auth';
 import { TENANT } from '../servicos/config';
 
 export type { Papel };
@@ -24,10 +25,15 @@ interface Usuario {
 interface AutenticacaoContextValor {
   usuario: Usuario | null;
   autenticado: boolean;
+  /** Carregando a sessão persistida (evita "flash-bounce" nos guards). */
+  carregando: boolean;
   ehAdmin: boolean;
+  ehConsultor: boolean;
   /** Tenant corrente do app (isolamento de dados e sessão). */
   tenantId: string;
-  entrar: (email: string, papel?: Papel) => void;
+  /** Verdadeiro se o papel do usuário está entre os informados. */
+  temPapel: (...papeis: Papel[]) => boolean;
+  entrar: (email: string, papel?: Papel, nome?: string) => void;
   sair: () => void;
 }
 
@@ -35,15 +41,26 @@ const AutenticacaoContext = createContext<AutenticacaoContextValor | null>(null)
 
 export function AutenticacaoProvider({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [carregando, setCarregando] = useState(true);
 
-  // Reidrata o token (JWT) salvo, para o modo `api` já iniciar autenticado.
+  // Reidrata o token salvo e, com ele, o usuário (papel) via /api/auth/me.
   useEffect(() => {
-    void carregarTokenPersistido();
+    let ativo = true;
+    (async () => {
+      await carregarTokenPersistido();
+      const u = await eu();
+      if (!ativo) return;
+      if (u) setUsuario({ ...u, tenantId: TENANT.id });
+      setCarregando(false);
+    })();
+    return () => {
+      ativo = false;
+    };
   }, []);
 
-  const entrar = useCallback((email: string, papel: Papel = 'cliente') => {
-    const nome = email.split('@')[0] ?? 'Viajante';
-    setUsuario({ nome, email, papel, tenantId: TENANT.id });
+  const entrar = useCallback((email: string, papel: Papel = 'cliente', nome?: string) => {
+    const nomeFinal = (nome ?? email.split('@')[0] ?? 'Viajante').trim();
+    setUsuario({ nome: nomeFinal, email, papel, tenantId: TENANT.id });
   }, []);
 
   const sair = useCallback(() => {
@@ -51,16 +68,24 @@ export function AutenticacaoProvider({ children }: { children: React.ReactNode }
     setUsuario(null);
   }, []);
 
+  const temPapel = useCallback(
+    (...papeis: Papel[]) => (usuario ? papeis.includes(usuario.papel) : false),
+    [usuario],
+  );
+
   const valor = useMemo(
     () => ({
       usuario,
       autenticado: usuario !== null,
+      carregando,
       ehAdmin: usuario?.papel === 'admin',
+      ehConsultor: usuario?.papel === 'consultor',
       tenantId: TENANT.id,
+      temPapel,
       entrar,
       sair,
     }),
-    [usuario, entrar, sair],
+    [usuario, carregando, temPapel, entrar, sair],
   );
 
   return (

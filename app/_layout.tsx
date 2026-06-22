@@ -37,6 +37,12 @@ export default function LayoutRaiz() {
                 name="login"
                 options={{ headerShown: false, presentation: 'modal' }}
               />
+              <Stack.Screen
+                name="register"
+                options={{ headerShown: false, presentation: 'modal' }}
+              />
+              <Stack.Screen name="painel" options={{ headerShown: false }} />
+              <Stack.Screen name="admin" options={{ headerShown: false }} />
             </Stack>
             <PromptInstalacao />
           </CarrinhoProvider>
