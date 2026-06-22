@@ -34,7 +34,15 @@ export { obterEstatisticas } from './admin';
 export type { EstatisticasAdmin } from './admin';
 export { linkWhatsApp } from './whatsapp';
 export { enviarFotoOferta } from './upload';
-export { linkCheckoutOficial, abrirCheckoutOficial, linkWhiteLabel, abrirWhiteLabel } from './site';
+export {
+  linkCheckoutOficial,
+  abrirCheckoutOficial,
+  linkWhiteLabel,
+  abrirWhiteLabel,
+  linkBuscaOnibus,
+  abrirBuscaOnibus,
+} from './site';
+export type { BuscaOnibus } from './site';
 export { ErroApi, requisitar } from './cliente';
 export { ENDPOINTS } from './endpoints';
 export { tokenAtual, definirToken, carregarTokenPersistido } from './sessao';

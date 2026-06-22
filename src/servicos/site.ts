@@ -23,6 +23,38 @@ export async function abrirWhiteLabel(secao?: string): Promise<void> {
   await Linking.openURL(linkWhiteLabel(secao));
 }
 
+export interface BuscaOnibus {
+  origem: string;
+  destino: string;
+  dataIda: string;
+  dataVolta?: string;
+  passageiros: string;
+}
+
+/**
+ * Monta a URL da white label já com os dados da busca de ônibus. Os nomes dos
+ * parâmetros são um palpite razoável; se a Buson usar outros, a página abre do
+ * mesmo jeito (parâmetros desconhecidos são ignorados).
+ */
+export function linkBuscaOnibus(b: BuscaOnibus): string {
+  const query = new URLSearchParams({
+    utm_source: 'app',
+    utm_medium: 'app',
+    utm_campaign: 'onibus',
+  });
+  if (b.origem) query.set('origem', b.origem);
+  if (b.destino) query.set('destino', b.destino);
+  if (b.dataIda) query.set('data_ida', b.dataIda);
+  if (b.dataVolta) query.set('data_volta', b.dataVolta);
+  if (b.passageiros) query.set('passageiros', b.passageiros);
+  return `${WHITE_LABEL.url}/?${query.toString()}`;
+}
+
+/** Abre a white label com os dados da busca de ônibus pré-preenchidos. */
+export async function abrirBuscaOnibus(b: BuscaOnibus): Promise<void> {
+  await Linking.openURL(linkBuscaOnibus(b));
+}
+
 /** O checkout encaminha para a white label (medium = checkout). */
 export function linkCheckoutOficial(): string {
   return linkWhiteLabel(undefined, 'checkout');
