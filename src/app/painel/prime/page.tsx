@@ -132,7 +132,12 @@ export default async function PainelPrimePage({
                 {i + 1}º
               </span>
               <div>
-                <h3 className="font-bold text-tinta">{a.nome}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-tinta">{a.nome}</h3>
+                  {a.destaque && (
+                    <span className="selo bg-marca-100 text-marca-700">{a.destaque}</span>
+                  )}
+                </div>
                 <p className="text-xs text-slate-500">
                   {a.area} · {a.regiao}
                 </p>

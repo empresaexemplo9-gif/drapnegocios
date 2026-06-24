@@ -50,6 +50,22 @@ export default async function PlanosPage({
         </p>
       )}
 
+      {/* Para quem é a visibilidade */}
+      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        <Publico
+          titulo="Empresas que contratam"
+          desc="A IA lê e ranqueia todos os currículos das suas vagas e entrega os melhores proativamente."
+        />
+        <Publico
+          titulo="Vendedores e prestadores"
+          desc="Seus produtos e serviços ganham selo de destaque e mais alcance na vitrine, por demanda."
+        />
+        <Publico
+          titulo="Quem busca trabalho (CLT)"
+          desc="Seu currículo aparece em destaque e melhor posicionado no ranking que as empresas veem."
+        />
+      </div>
+
       <div className="mt-10 grid gap-5 lg:grid-cols-4 sm:grid-cols-2">
         {planos.map((p) => {
           const atual = usuario ? dePlanoDb(usuario.plano) === p.chave : false;
@@ -122,6 +138,15 @@ export default async function PlanosPage({
           Abrir o painel de visibilidade →
         </Link>
       </p>
+    </div>
+  );
+}
+
+function Publico({ titulo, desc }: { titulo: string; desc: string }) {
+  return (
+    <div className="cartao">
+      <h3 className="font-bold text-tinta">{titulo}</h3>
+      <p className="mt-1 text-sm text-slate-600">{desc}</p>
     </div>
   );
 }

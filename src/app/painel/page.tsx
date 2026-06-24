@@ -81,8 +81,9 @@ export default async function PainelPage({
       </div>
 
       {/* Atalhos */}
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Atalho href="/painel/vagas" titulo="Minhas vagas" desc="Publicar e gerir vagas, ver candidatos." />
+        <Atalho href="/painel/vitrine" titulo="Minha vitrine" desc="Produtos/serviços com visibilidade por plano." />
         <Atalho href="/painel/prime" titulo="Ranking por IA" desc="Currículos pontuados e métricas." />
         <Atalho href="/vagas" titulo="Banco de vagas" desc="Ver o board público da plataforma." />
       </div>

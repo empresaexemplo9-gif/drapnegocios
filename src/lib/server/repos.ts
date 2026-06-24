@@ -7,6 +7,7 @@
 import { withTenant, prisma } from './prisma';
 import { dePlanoDb, paraPlanoDb, type ChavePlano } from '../planos';
 import { classificar } from '../classificacao';
+import { ordenarPorVisibilidade, rotuloDestaque, alcanceLabel } from '../visibilidade';
 import type { Candidato } from '../candidatos';
 import type { Vaga as VagaMock } from '../dados';
 
@@ -98,9 +99,16 @@ export interface CandidatoRanqueado {
   score: number;
   resumo: string;
   criterios: { aderencia: number; experiencia: number; certificacoes: number; referencias: number };
+  /** Plano do candidato (do tenant dele) e selo de destaque, se houver. */
+  planoCandidato: ChavePlano;
+  destaque: string | null;
 }
 
-/** Ranking de candidatos de uma vaga, lendo o score já calculado pela IA. */
+/**
+ * Ranking de candidatos de uma vaga. Ordena por mérito (score da IA) + boost de
+ * visibilidade do plano do candidato — o score exibido continua sendo o mérito
+ * real; o plano só melhora o posicionamento e adiciona o selo de destaque.
+ */
 export async function ranquearCandidatos(
   tenantId: string,
   jobId: string,
@@ -108,7 +116,7 @@ export async function ranquearCandidatos(
   return withTenant(tenantId, async (db) => {
     const apps = await db.application.findMany({
       where: { jobId, tenantId },
-      include: { candidate: { include: { profile: true } } },
+      include: { candidate: { include: { profile: true, tenant: { select: { plano: true } } } } },
       orderBy: { scoreIa: 'desc' },
     });
     // Resumos de IA por referência (application.id).
@@ -117,8 +125,9 @@ export async function ranquearCandidatos(
     });
     const resumoPorRef = new Map(analises.map((a) => [a.referenciaId, a.resumo ?? '']));
 
-    return apps.map((a) => {
+    const lista: CandidatoRanqueado[] = apps.map((a) => {
       const c = (a.classificacaoIa as Record<string, number> | null) ?? {};
+      const planoCandidato = dePlanoDb(a.candidate.tenant.plano);
       return {
         applicationId: a.id,
         nome: a.candidate.nome,
@@ -132,8 +141,17 @@ export async function ranquearCandidatos(
           certificacoes: Number(c.certificacoes ?? 0),
           referencias: Number(c.referencias ?? 0),
         },
+        planoCandidato,
+        destaque: rotuloDestaque(planoCandidato),
       };
     });
+
+    // Reordena por mérito + boost de visibilidade do plano do candidato.
+    return ordenarPorVisibilidade(
+      lista,
+      (x) => x.score,
+      (x) => x.planoCandidato,
+    );
   });
 }
 
@@ -384,4 +402,104 @@ export async function candidatar(
   });
 
   return { ok: true, score: aval.score };
+}
+
+// ───────────────────────── Vitrine (produtos e serviços) ─────────────────────────
+
+export interface ItemVitrine {
+  id: string;
+  nome: string;
+  vendedor: string;
+  categoria: string;
+  preco: string;
+  regiao: string;
+  descricao: string;
+  /** Visibilidade por plano do vendedor (selo e alcance). */
+  destaque: string | null;
+  alcance: string;
+}
+
+function precoFmt(preco: unknown): string {
+  const n = Number(preco);
+  if (!Number.isFinite(n) || n <= 0) return 'Sob consulta';
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+/** Vitrine pública: produtos/serviços ativos, ordenados por relevância + plano. */
+export async function listarVitrine(): Promise<ItemVitrine[]> {
+  const produtos = await prisma.product.findMany({
+    where: { status: 'ativo' },
+    include: { seller: { select: { nome: true } }, tenant: { select: { nome: true, plano: true } } },
+    orderBy: { criadoEm: 'desc' },
+    take: 100,
+  });
+  const mapeado = produtos.map((p) => {
+    const plano = dePlanoDb(p.tenant.plano);
+    return {
+      item: {
+        id: p.id,
+        nome: p.nome,
+        vendedor: p.seller?.nome ?? p.tenant.nome,
+        categoria: p.categoria ?? 'Geral',
+        preco: precoFmt(p.preco),
+        regiao: p.regiaoAtendimento ?? 'Remoto',
+        descricao: p.descricao,
+        destaque: rotuloDestaque(plano),
+        alcance: alcanceLabel(plano),
+      } as ItemVitrine,
+      relevancia: p.scoreRelevancia,
+      plano,
+    };
+  });
+  // Ordena por relevância + boost do plano; devolve só o item.
+  return ordenarPorVisibilidade(mapeado, (x) => x.relevancia, (x) => x.plano).map((x) => x.item);
+}
+
+export interface NovoProduto {
+  nome: string;
+  descricao: string;
+  categoria: string;
+  preco: string;
+  regiao: string;
+}
+
+export async function criarProduto(tenantId: string, userId: string, dados: NovoProduto): Promise<void> {
+  const t = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { plano: true } });
+  const precoNum = Number(String(dados.preco).replace(',', '.'));
+  await withTenant(tenantId, (db) =>
+    db.product.create({
+      data: {
+        tenantId,
+        sellerId: userId,
+        nome: dados.nome,
+        descricao: dados.descricao,
+        categoria: dados.categoria || null,
+        preco: Number.isFinite(precoNum) && precoNum > 0 ? precoNum.toFixed(2) : null,
+        regiaoAtendimento: dados.regiao || null,
+        planoNoCadastro: (t?.plano ?? 'free') as never,
+        // Relevância base; cresce com engajamento/atualizações na fase seguinte.
+        scoreRelevancia: 50,
+      },
+    }),
+  );
+}
+
+export interface MeuProduto {
+  id: string;
+  nome: string;
+  status: string;
+  preco: string;
+}
+
+export async function meusProdutos(tenantId: string): Promise<MeuProduto[]> {
+  return withTenant(tenantId, async (db) => {
+    const ps = await db.product.findMany({ where: { tenantId }, orderBy: { criadoEm: 'desc' } });
+    return ps.map((p) => ({ id: p.id, nome: p.nome, status: p.status, preco: precoFmt(p.preco) }));
+  });
+}
+
+export async function removerProduto(tenantId: string, id: string): Promise<void> {
+  await withTenant(tenantId, (db) =>
+    db.product.updateMany({ where: { id, tenantId }, data: { status: 'inativo' } }),
+  );
 }
