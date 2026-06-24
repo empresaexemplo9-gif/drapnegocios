@@ -51,9 +51,12 @@ export default function EntrarPage({ searchParams }: { searchParams: { erro?: st
 
         <form action={acaoEntrar} className="cartao mt-6 space-y-3">
           <h2 className="font-bold text-tinta">Entrar</h2>
-          <Campo nome="email" tipo="email" rotulo="E-mail" />
-          <Campo nome="senha" tipo="password" rotulo="Senha" />
+          <Campo nome="email" tipo="email" rotulo="E-mail" valor="demo@drap.business" />
+          <Campo nome="senha" tipo="password" rotulo="Senha" valor="demo1234" />
           <button className="btn-primario w-full">Entrar</button>
+          <p className="text-center text-xs text-slate-500">
+            Conta de teste já preenchida (plano Prime Pro ativo) — é só clicar em Entrar.
+          </p>
         </form>
 
         <form action={acaoRegistrar} className="cartao mt-4 space-y-3">
@@ -68,13 +71,24 @@ export default function EntrarPage({ searchParams }: { searchParams: { erro?: st
   );
 }
 
-function Campo({ nome, tipo, rotulo }: { nome: string; tipo: string; rotulo: string }) {
+function Campo({
+  nome,
+  tipo,
+  rotulo,
+  valor,
+}: {
+  nome: string;
+  tipo: string;
+  rotulo: string;
+  valor?: string;
+}) {
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-semibold text-slate-500">{rotulo}</span>
       <input
         name={nome}
         type={tipo}
+        defaultValue={valor}
         required
         className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-marca-500 focus:ring-2 focus:ring-marca-100"
       />

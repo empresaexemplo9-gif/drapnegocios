@@ -37,6 +37,33 @@ function hashSenha(senha: string, salt: string): string {
   return scryptSync(senha, salt, 64).toString('hex');
 }
 
+/**
+ * Conta de demonstração semeada na carga do módulo. Como o armazenamento é em
+ * memória, ela é recriada em cada instância serverless — garantindo que o login
+ * de demonstração SEMPRE funcione, mesmo sem banco. Cadastros de usuários novos
+ * só persistem de verdade quando o PostgreSQL entrar (fase 2).
+ */
+function semearDemo(): void {
+  const email = 'demo@drap.business';
+  if (usuarios.some((u) => u.email === email)) return;
+  const salt = 'drapdemosalt0000';
+  usuarios.push({
+    id: 'demo',
+    nome: 'Conta Demonstração',
+    email,
+    salt,
+    hash: hashSenha('demo1234', salt),
+    plano: 'pro',
+    perfil: {
+      tipo: 'empresa',
+      areaAtuacao: 'Tecnologia',
+      regiao: 'Goiânia - GO',
+      bio: 'Conta de demonstração da DRAP Business com plano Prime Pro ativo.',
+    },
+  });
+}
+semearDemo();
+
 export function registrar(nome: string, email: string, senha: string): Usuario {
   const e = email.trim().toLowerCase();
   if (usuarios.some((u) => u.email === e)) {
