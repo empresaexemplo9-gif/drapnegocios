@@ -82,6 +82,7 @@ async function main() {
         tenantId: tenant.id, empresaId: admin.id, titulo: 'Designer de Social Media',
         descricao: 'Peças para redes sociais.', nivel: 'junior', tipoContrato: 'PJ',
         regiao: 'Goiânia - GO', planoNaPublicacao: 'free',
+        area: 'Design & Branding', habilidades: ['Figma', 'Social Media', 'Identidade Visual'],
       },
     });
     await prisma.job.create({
@@ -89,6 +90,7 @@ async function main() {
         tenantId: tenant.id, empresaId: admin.id, titulo: 'Gestor de Tráfego Pago',
         descricao: 'Campanhas de performance.', nivel: 'pleno', tipoContrato: 'FREELA',
         regiao: 'Remoto', planoNaPublicacao: 'prime_basico',
+        area: 'Marketing Digital', habilidades: ['Google Ads', 'Meta Ads', 'Analytics'],
       },
     });
     await prisma.job.create({
@@ -96,6 +98,7 @@ async function main() {
         tenantId: tenant.id, empresaId: admin.id, titulo: 'Desenvolvedor(a) Full-Stack',
         descricao: 'Integrações e automações B2B.', nivel: 'senior', tipoContrato: 'CLT',
         regiao: 'Goiânia - GO', planoNaPublicacao: 'prime_elite',
+        area: 'Tecnologia', habilidades: ['React', 'APIs', 'Cloud'],
       },
     });
 

@@ -227,6 +227,8 @@ model Job {
   titulo      String
   descricao   String
   requisitos  String?
+  area        String?
+  habilidades String[]     @default([])
   nivel       NivelVaga    @default(pleno)
   tipoContrato TipoContrato @default(CLT)
   regiao      String?

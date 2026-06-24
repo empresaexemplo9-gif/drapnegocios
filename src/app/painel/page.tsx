@@ -80,6 +80,13 @@ export default async function PainelPage({
         )}
       </div>
 
+      {/* Atalhos */}
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <Atalho href="/painel/vagas" titulo="Minhas vagas" desc="Publicar e gerir vagas, ver candidatos." />
+        <Atalho href="/painel/prime" titulo="Ranking por IA" desc="Currículos pontuados e métricas." />
+        <Atalho href="/vagas" titulo="Banco de vagas" desc="Ver o board público da plataforma." />
+      </div>
+
       <form action={salvar} className="cartao mt-8 grid gap-4 sm:grid-cols-2">
         <h2 className="font-bold text-tinta sm:col-span-2">Complete seu perfil</h2>
         <Campo nome="areaAtuacao" rotulo="Área de atuação" valor={u.perfil?.areaAtuacao ?? ''} />
@@ -109,6 +116,16 @@ function calcularCompletude(u: {
   const campos = [u.nome, u.email, u.perfil?.areaAtuacao, u.perfil?.regiao, u.perfil?.bio];
   const preenchidos = campos.filter((c) => c && c.trim().length > 0).length;
   return Math.round((preenchidos / campos.length) * 100);
+}
+
+function Atalho({ href, titulo, desc }: { href: string; titulo: string; desc: string }) {
+  return (
+    <Link href={href} className="cartao block">
+      <h3 className="font-bold text-tinta">{titulo}</h3>
+      <p className="mt-1 text-sm text-slate-600">{desc}</p>
+      <span className="mt-2 inline-block text-sm font-semibold text-marca-600">Abrir →</span>
+    </Link>
+  );
 }
 
 function Campo({ nome, rotulo, valor }: { nome: string; rotulo: string; valor: string }) {

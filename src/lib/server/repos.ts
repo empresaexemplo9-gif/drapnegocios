@@ -6,6 +6,9 @@
  */
 import { withTenant, prisma } from './prisma';
 import { dePlanoDb, paraPlanoDb, type ChavePlano } from '../planos';
+import { classificar } from '../classificacao';
+import type { Candidato } from '../candidatos';
+import type { Vaga as VagaMock } from '../dados';
 
 export interface UsuarioView {
   id: string;
@@ -180,4 +183,205 @@ export async function assinarPlano(
 export async function planoDoTenant(tenantId: string): Promise<ChavePlano> {
   const t = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { plano: true } });
   return dePlanoDb(t?.plano ?? 'free');
+}
+
+// ───────────────────────── Marketplace de vagas ─────────────────────────
+
+export interface VagaPublica {
+  id: string;
+  titulo: string;
+  empresa: string;
+  area: string;
+  regiao: string;
+  nivel: string;
+  tipoContrato: string;
+  descricao: string;
+  habilidades: string[];
+}
+
+function listaSeparada(v: string): string[] {
+  return v
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/** Board público: vagas abertas de todos os negócios. */
+export async function listarVagasPublicas(): Promise<VagaPublica[]> {
+  const jobs = await prisma.job.findMany({
+    where: { status: 'aberta' },
+    include: { tenant: { select: { nome: true } } },
+    orderBy: { criadoEm: 'desc' },
+    take: 100,
+  });
+  return jobs.map((j) => ({
+    id: j.id,
+    titulo: j.titulo,
+    empresa: j.tenant.nome,
+    area: j.area ?? '—',
+    regiao: j.regiao ?? 'Remoto',
+    nivel: j.nivel,
+    tipoContrato: j.tipoContrato,
+    descricao: j.descricao,
+    habilidades: j.habilidades,
+  }));
+}
+
+export async function vagaPublicaPorId(id: string): Promise<VagaPublica | null> {
+  const j = await prisma.job.findFirst({
+    where: { id, status: 'aberta' },
+    include: { tenant: { select: { nome: true } } },
+  });
+  if (!j) return null;
+  return {
+    id: j.id,
+    titulo: j.titulo,
+    empresa: j.tenant.nome,
+    area: j.area ?? '—',
+    regiao: j.regiao ?? 'Remoto',
+    nivel: j.nivel,
+    tipoContrato: j.tipoContrato,
+    descricao: j.descricao,
+    habilidades: j.habilidades,
+  };
+}
+
+export interface NovaVaga {
+  titulo: string;
+  descricao: string;
+  area: string;
+  regiao: string;
+  habilidades: string; // separadas por vírgula
+  nivel: string;
+  tipoContrato: string;
+}
+
+export async function criarVaga(tenantId: string, userId: string, dados: NovaVaga): Promise<void> {
+  const t = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { plano: true } });
+  await withTenant(tenantId, (db) =>
+    db.job.create({
+      data: {
+        tenantId,
+        empresaId: userId,
+        titulo: dados.titulo,
+        descricao: dados.descricao,
+        area: dados.area || null,
+        regiao: dados.regiao || null,
+        habilidades: listaSeparada(dados.habilidades),
+        nivel: (dados.nivel || 'pleno') as never,
+        tipoContrato: (dados.tipoContrato || 'CLT') as never,
+        planoNaPublicacao: (t?.plano ?? 'free') as never,
+      },
+    }),
+  );
+}
+
+export interface MinhaVaga {
+  id: string;
+  titulo: string;
+  status: string;
+  candidaturas: number;
+}
+
+export async function minhasVagas(tenantId: string): Promise<MinhaVaga[]> {
+  return withTenant(tenantId, async (db) => {
+    const jobs = await db.job.findMany({
+      where: { tenantId },
+      include: { _count: { select: { applications: true } } },
+      orderBy: { criadoEm: 'desc' },
+    });
+    return jobs.map((j) => ({
+      id: j.id,
+      titulo: j.titulo,
+      status: j.status,
+      candidaturas: j._count.applications,
+    }));
+  });
+}
+
+export async function fecharVaga(tenantId: string, jobId: string): Promise<void> {
+  await withTenant(tenantId, (db) =>
+    db.job.updateMany({ where: { id: jobId, tenantId }, data: { status: 'fechada' } }),
+  );
+}
+
+export interface DadosCandidatura {
+  habilidades: string; // separadas por vírgula
+  anosExperiencia: number;
+  certificacoes: number;
+  referencias: number;
+  formacao?: string;
+  curriculoUrl?: string;
+}
+
+/**
+ * Candidatura a uma vaga + classificação pela IA (heurística determinística;
+ * aprofunda com a Anthropic quando a chave estiver ativa). Grava a application
+ * sob o tenant da vaga e cria o registro de análise para o ranking do Prime.
+ */
+export async function candidatar(
+  jobId: string,
+  candidateId: string,
+  candidateNome: string,
+  dados: DadosCandidatura,
+): Promise<{ ok: boolean; erro?: string; score?: number }> {
+  const job = await prisma.job.findUnique({ where: { id: jobId } });
+  if (!job || job.status !== 'aberta') return { ok: false, erro: 'Vaga indisponível.' };
+
+  const jaExiste = await prisma.application.findUnique({
+    where: { jobId_candidateId: { jobId, candidateId } },
+  });
+  if (jaExiste) return { ok: false, erro: 'Você já se candidatou a esta vaga.' };
+
+  const candidato: Candidato = {
+    id: candidateId,
+    nome: candidateNome,
+    area: job.area ?? '',
+    regiao: job.regiao ?? '',
+    anosExperiencia: dados.anosExperiencia,
+    formacao: dados.formacao ?? '',
+    certificacoes: Array.from({ length: dados.certificacoes }, (_, i) => `Certificação ${i + 1}`),
+    habilidades: listaSeparada(dados.habilidades),
+    referencias: dados.referencias,
+    resumo: '',
+  };
+  const vaga: VagaMock = {
+    id: job.id,
+    titulo: job.titulo,
+    empresa: '',
+    tipo: 'PJ',
+    area: job.area ?? '',
+    regiao: job.regiao ?? '',
+    habilidades: job.habilidades,
+    descricao: job.descricao,
+    salario: '',
+  };
+  const aval = classificar(candidato, vaga);
+  const tenantId = job.tenantId;
+
+  await withTenant(tenantId, async (db) => {
+    const app = await db.application.create({
+      data: {
+        tenantId,
+        jobId,
+        candidateId,
+        curriculoUrl: dados.curriculoUrl || null,
+        scoreIa: aval.score,
+        classificacaoIa: aval.criterios,
+        status: 'em_analise',
+      },
+    });
+    await db.aiAnalysis.create({
+      data: {
+        tenantId,
+        tipo: 'curriculo',
+        referenciaId: app.id,
+        score: aval.score,
+        resumo: aval.resumo,
+        modelo: 'heuristica-v1',
+      },
+    });
+  });
+
+  return { ok: true, score: aval.score };
 }
