@@ -18,6 +18,8 @@ tela inicial").
 
 Navegável com dados de demonstração (sem precisar de banco):
 
+- **Autenticação** (`/entrar`) — cadastro e login com senha protegida (hash + salt),
+  sessão por cookie assinado; área protegida **`/painel`** para completar o perfil.
 - **Perfil Unificado** (`/perfil`) — pessoa, empresa, autônomo ou produto, com score.
 - **Banco de Vagas e Talentos** (`/vagas`) — vagas CLT/PJ/freela com **match básico** por
   habilidade, área e região (`src/lib/match.ts`).
