@@ -19,21 +19,21 @@ export default function Home() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-gradient-to-br from-marca-900 via-marca-800 to-marca-700 text-white">
+      <section className="bg-gradient-to-br from-ink-950 via-ink-900 to-ink-800 text-white">
         <div className="container-app py-20 sm:py-28">
-          <span className="selo bg-white/10 text-marca-100">Hub de negócios e conexões</span>
+          <span className="selo bg-marca-500/15 text-marca-300">Hub de negócios e conexões</span>
           <h1 className="mt-4 max-w-3xl text-4xl font-black leading-tight tracking-tight sm:text-5xl">
             Um perfil único para captar clientes, talentos e parceiros.
           </h1>
-          <p className="mt-5 max-w-2xl text-lg text-marca-100">
+          <p className="mt-5 max-w-2xl text-lg text-ink-200">
             A DRAP Business une marketing, banco de vagas, vitrine de serviços e uma rede de
             captação — tudo em um só lugar, para empresas, profissionais e autônomos.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/perfil" className="btn-primario bg-white !text-marca-700 hover:!bg-marca-50">
+            <Link href="/perfil" className="btn-primario">
               Criar meu perfil
             </Link>
-            <Link href="/feed" className="btn-secundario !border-white/30 !bg-transparent !text-white hover:!border-white">
+            <Link href="/feed" className="btn-secundario !border-white/30 !bg-transparent !text-white hover:!border-white hover:!text-white">
               Ver a rede de captação
             </Link>
           </div>
