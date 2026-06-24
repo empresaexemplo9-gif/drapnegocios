@@ -30,15 +30,32 @@ export const authOptions: NextAuthOptions = {
         tenantSlug: { label: 'Empresa', type: 'text' },
       },
       async authorize(cred) {
-        if (!cred?.email || !cred?.senha || !cred?.tenantSlug) return null;
+        if (!cred?.email || !cred?.senha) return null;
+        const email = cred.email.toLowerCase();
 
-        const tenant = await prisma.tenant.findUnique({ where: { slug: cred.tenantSlug } });
-        if (!tenant) return null;
-
-        const user = await prisma.user.findUnique({
-          where: { tenantId_email: { tenantId: tenant.id, email: cred.email.toLowerCase() } },
-        });
+        // Resolve o usuário: com slug, no tenant indicado; sem slug, pelo e-mail
+        // (se ele existir em um único negócio). Em múltiplos, exige o slug.
+        let user;
+        if (cred.tenantSlug) {
+          const tenant = await prisma.tenant.findUnique({ where: { slug: cred.tenantSlug } });
+          if (!tenant) return null;
+          user = await prisma.user.findUnique({
+            where: { tenantId_email: { tenantId: tenant.id, email } },
+            include: { tenant: true },
+          });
+        } else {
+          const matches = await prisma.user.findMany({
+            where: { email },
+            include: { tenant: true },
+            take: 2,
+          });
+          if (matches.length > 1) {
+            throw new Error('Este e-mail existe em mais de um negócio. Informe o slug da empresa.');
+          }
+          user = matches[0] ?? null;
+        }
         if (!user || !user.senhaHash) return null;
+        const tenant = user.tenant;
 
         // Conta bloqueada?
         if (user.bloqueadoAte && user.bloqueadoAte > new Date()) {

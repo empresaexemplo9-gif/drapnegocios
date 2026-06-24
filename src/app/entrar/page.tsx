@@ -21,10 +21,10 @@ export default function EntrarPage() {
       redirect: false,
       email: String(f.get('email')),
       senha: String(f.get('senha')),
-      tenantSlug: String(f.get('tenantSlug') || 'demo'),
+      tenantSlug: String(f.get('tenantSlug') || ''),
     });
     setCarregando(false);
-    if (res?.error) setErro('E-mail, senha ou empresa inválidos.');
+    if (res?.error) setErro(res.error.includes('negócio') ? res.error : 'E-mail ou senha inválidos.');
     else router.push(proximo);
   }
 
@@ -61,7 +61,7 @@ export default function EntrarPage() {
       redirect: false,
       email: String(f.get('email')),
       senha,
-      tenantSlug: data.tenantSlug ?? 'demo',
+      tenantSlug: data.tenantSlug ?? '',
     });
     setCarregando(false);
     router.push('/painel');
@@ -103,12 +103,15 @@ export default function EntrarPage() {
 
         <form onSubmit={entrar} className="cartao mt-6 space-y-3">
           <h2 className="font-bold text-tinta">Entrar</h2>
-          <Campo nome="tenantSlug" tipo="text" rotulo="Empresa (slug)" valor="demo" />
-          <Campo nome="email" tipo="email" rotulo="E-mail" valor="admin@demo.drap" />
-          <Campo nome="senha" tipo="password" rotulo="Senha" valor="Drap@2026" />
+          <Campo nome="tenantSlug" tipo="text" rotulo="Empresa (slug) — opcional" opcional />
+          <Campo nome="email" tipo="email" rotulo="E-mail" />
+          <Campo nome="senha" tipo="password" rotulo="Senha" />
           <button disabled={carregando} className="btn-primario w-full">
             {carregando ? 'Entrando…' : 'Entrar'}
           </button>
+          <p className="text-center text-xs text-slate-400">
+            Primeiro acesso? Crie seu negócio no formulário abaixo.
+          </p>
         </form>
 
         <form onSubmit={cadastrar} className="cartao mt-4 space-y-3">
@@ -131,11 +134,13 @@ function Campo({
   tipo,
   rotulo,
   valor,
+  opcional,
 }: {
   nome: string;
   tipo: string;
   rotulo: string;
   valor?: string;
+  opcional?: boolean;
 }) {
   return (
     <label className="block">
@@ -144,7 +149,7 @@ function Campo({
         name={nome}
         type={tipo}
         defaultValue={valor}
-        required
+        required={!opcional}
         className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-marca-500 focus:ring-2 focus:ring-marca-100"
       />
     </label>
