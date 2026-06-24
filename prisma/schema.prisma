@@ -1,6 +1,12 @@
-// DRAP Business — modelo de dados (PostgreSQL via Prisma).
-// MVP: Perfil unificado, Vagas + match, Vitrine, Feed de captação.
-// Fase 2: integrações sociais, CRM, propostas, grupos, gamificação.
+// DRAP Business — schema multi-tenant (PostgreSQL via Prisma).
+//
+// Estratégia: schema compartilhado com coluna `tenantId` em todas as tabelas
+// de domínio. O isolamento é reforçado no banco com Row Level Security (RLS) —
+// ver `prisma/rls.sql`. A aplicação injeta o tenant da sessão em cada transação
+// (ver src/lib/server/prisma.ts → withTenant).
+//
+// IDs são UUID (gen_random_uuid via pgcrypto) para casarem com os casts ::uuid
+// das políticas de RLS.
 
 generator client {
   provider = "prisma-client-js"
@@ -11,101 +17,395 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum TipoPerfil {
-  PESSOA
-  EMPRESA
-  AUTONOMO
-  PRODUTO
+// ───────────────────────── Enums ─────────────────────────
+
+enum Plano {
+  free
+  prime_basico
+  prime_pro
+  prime_elite
 }
 
-enum TipoVaga {
+enum StatusAssinatura {
+  trial
+  ativa
+  inadimplente
+  cancelada
+}
+
+enum TipoPerfilUsuario {
+  pessoa_fisica
+  empresa
+  autonomo
+}
+
+enum StatusUsuario {
+  ativo
+  suspenso
+  pendente
+}
+
+enum PapelUsuario {
+  super_admin
+  admin
+  manager
+  recruiter
+  seller
+  candidate
+  viewer
+}
+
+enum TipoProfile {
+  candidato
+  empresa_contratante
+  vendedor
+  comprador
+}
+
+enum NivelVaga {
+  estagio
+  junior
+  pleno
+  senior
+  especialista
+}
+
+enum TipoContrato {
   CLT
   PJ
   FREELA
+  TEMPORARIO
 }
 
-enum TipoPost {
-  BUSCA_SERVICO
-  BUSCA_PARCEIRO
-  DISPONIVEL
-  PRODUTO
+enum StatusVaga {
+  aberta
+  pausada
+  fechada
 }
 
-/// Perfil unificado: pessoa física, empresa, autônomo ou produto/serviço.
-model Perfil {
-  id           String      @id @default(cuid())
-  tipo         TipoPerfil
+enum StatusCandidatura {
+  recebido
+  em_analise
+  aprovado
+  recusado
+}
+
+enum StatusProduto {
+  ativo
+  inativo
+  esgotado
+}
+
+enum TipoAnalise {
+  curriculo
+  produto
+  perfil
+}
+
+enum AcaoConvite {
+  pendente
+  aceito
+  expirado
+}
+
+// ───────────────────────── Tenant ─────────────────────────
+
+model Tenant {
+  id                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome              String
+  slug              String           @unique
+  plano             Plano            @default(free)
+  statusAssinatura  StatusAssinatura @default(trial)
+  configuracoes     Json             @default("{}")
+  logoUrl           String?
+  dominioCustomizado String?         @unique
+  criadoEm          DateTime         @default(now())
+  atualizadoEm      DateTime         @updatedAt
+
+  users         User[]
+  profiles      Profile[]
+  jobs          Job[]
+  applications  Application[]
+  products      Product[]
+  subscriptions Subscription[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
+  aiAnalyses    AiAnalysis[]
+  convites      Convite[]
+
+  @@index([slug])
+  @@map("tenants")
+}
+
+// ───────────────────────── User ─────────────────────────
+
+model User {
+  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String            @db.Uuid
   nome         String
-  areaAtuacao  String
-  regiao       String
-  bio          String?
-  contato      String?
-  site         String?
-  habilidades  String[]    @default([])
-  /// Score de completude/atividade (0–100), usado no ranqueamento das buscas.
-  score        Int         @default(0)
-  criadoEm     DateTime    @default(now())
+  email        String
+  senhaHash    String?
+  tipoPerfil   TipoPerfilUsuario @default(pessoa_fisica)
+  papel        PapelUsuario      @default(viewer)
+  avatarUrl    String?
+  scoreIa      Int               @default(0)
+  status       StatusUsuario     @default(pendente)
+  emailVerificadoEm DateTime?
+  tentativasLogin   Int          @default(0)
+  bloqueadoAte      DateTime?
+  ultimoAcesso DateTime?
+  criadoEm     DateTime          @default(now())
+  atualizadoEm DateTime          @updatedAt
+
+  tenant       Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  profile      Profile?
+  accounts     Account[]
+  applications Application[]      @relation("CandidatoApplications")
+  products     Product[]         @relation("VendedorProducts")
+  jobs         Job[]             @relation("EmpresaJobs")
+  auditLogs    AuditLog[]
+  notifications Notification[]
+  otpCodes     OtpCode[]
+
+  // E-mail único por tenant (mesmo e-mail pode existir em tenants distintos).
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@map("users")
+}
+
+// Conta OAuth vinculada (Google, LinkedIn, ...). Compatível com NextAuth.
+model Account {
+  id                String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String  @db.Uuid
+  provider          String
+  providerAccountId String
+  type              String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+// ───────────────────────── Profile ─────────────────────────
+
+model Profile {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String      @db.Uuid
+  userId          String      @unique @db.Uuid
+  tipo            TipoProfile
+  areaAtuacao     String?
+  regiao          String?
+  bio             String?
+  portfolio       Json        @default("[]")
+  redesSociais    Json        @default("{}")
+  visibilidadePublica Boolean @default(true)
+  criadoEm        DateTime    @default(now())
+  atualizadoEm    DateTime    @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("profiles")
+}
+
+// ───────────────────────── Job ─────────────────────────
+
+model Job {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String       @db.Uuid
+  empresaId   String       @db.Uuid
+  titulo      String
+  descricao   String
+  requisitos  String?
+  nivel       NivelVaga    @default(pleno)
+  tipoContrato TipoContrato @default(CLT)
+  regiao      String?
+  status      StatusVaga   @default(aberta)
+  planoNaPublicacao Plano  @default(free)
+  expiraEm    DateTime?
+  criadoEm    DateTime     @default(now())
   atualizadoEm DateTime    @updatedAt
 
-  vagas        Vaga[]      @relation("EmpresaVagas")
-  candidaturas Candidatura[]
-  servicos     Servico[]
-  posts        PostFeed[]
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  empresa      User          @relation("EmpresaJobs", fields: [empresaId], references: [id])
+  applications Application[]
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("jobs")
 }
 
-/// Vaga publicada por uma empresa/autônomo.
-model Vaga {
-  id          String   @id @default(cuid())
-  titulo      String
-  tipo        TipoVaga
-  area        String
-  regiao      String
-  habilidades String[] @default([])
+// ───────────────────────── Application ─────────────────────────
+
+model Application {
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String            @db.Uuid
+  jobId         String            @db.Uuid
+  candidateId   String            @db.Uuid
+  curriculoUrl  String?
+  scoreIa       Int?
+  classificacaoIa Json?
+  status        StatusCandidatura @default(recebido)
+  criadoEm      DateTime          @default(now())
+  atualizadoEm  DateTime          @updatedAt
+
+  tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  job       Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidate User   @relation("CandidatoApplications", fields: [candidateId], references: [id])
+
+  @@unique([jobId, candidateId])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("applications")
+}
+
+// ───────────────────────── Product ─────────────────────────
+
+model Product {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String        @db.Uuid
+  sellerId    String        @db.Uuid
+  nome        String
   descricao   String
-  salario     String?
-  ativa       Boolean  @default(true)
-  criadoEm    DateTime @default(now())
+  categoria   String?
+  preco       Decimal?      @db.Decimal(12, 2)
+  regiaoAtendimento String?
+  imagens     Json          @default("[]")
+  status      StatusProduto @default(ativo)
+  planoNoCadastro Plano     @default(free)
+  scoreRelevancia Int       @default(0)
+  criadoEm    DateTime      @default(now())
+  atualizadoEm DateTime     @updatedAt
 
-  empresa   Perfil @relation("EmpresaVagas", fields: [empresaId], references: [id])
-  empresaId String
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  seller User   @relation("VendedorProducts", fields: [sellerId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("products")
 }
 
-/// Currículo/candidatura de um profissional a uma vaga (match por habilidade/região/área).
-model Candidatura {
-  id          String   @id @default(cuid())
-  habilidades String[] @default([])
-  area        String
-  regiao      String
-  resumo      String?
-  criadoEm    DateTime @default(now())
+// ───────────────────────── Subscription ─────────────────────────
 
-  perfil   Perfil @relation(fields: [perfilId], references: [id])
-  perfilId String
+model Subscription {
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String           @db.Uuid
+  plano           Plano
+  status          StatusAssinatura @default(trial)
+  inicioEm        DateTime         @default(now())
+  renovaEm        DateTime?
+  gateway         String?
+  paymentIdExterno String?
+  faturas         Json             @default("[]")
+  criadoEm        DateTime         @default(now())
+  atualizadoEm    DateTime         @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("subscriptions")
 }
 
-/// Item da vitrine/marketplace: serviço ou produto de um perfil.
-model Servico {
-  id            String   @id @default(cuid())
-  titulo        String
-  descricao     String
-  preco         Decimal? @db.Decimal(12, 2)
-  prazoEntrega  String?
-  regiao        String
-  imagemUrl     String?
-  criadoEm      DateTime @default(now())
+// ───────────────────────── AuditLog ─────────────────────────
 
-  perfil   Perfil @relation(fields: [perfilId], references: [id])
-  perfilId String
+model AuditLog {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String   @db.Uuid
+  userId       String?  @db.Uuid
+  acao         String
+  tabelaAfetada String?
+  dadosAnteriores Json?
+  dadosNovos   Json?
+  ip           String?
+  userAgent    String?
+  timestamp    DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([tenantId, timestamp])
+  @@map("audit_logs")
 }
 
-/// Post do feed de captação (cliente buscando, parceiro, disponível, produto).
-model PostFeed {
-  id        String   @id @default(cuid())
-  tipo      TipoPost
-  texto     String
-  regiao    String?
+// ───────────────────────── Notification ─────────────────────────
+
+model Notification {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId  String   @db.Uuid
+  userId    String   @db.Uuid
+  tipo      String
+  conteudo  String
+  lido      Boolean  @default(false)
   criadoEm  DateTime @default(now())
 
-  autor   Perfil @relation(fields: [autorId], references: [id])
-  autorId String
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId])
+  @@map("notifications")
+}
+
+// ───────────────────────── AiAnalysis ─────────────────────────
+
+model AiAnalysis {
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String      @db.Uuid
+  tipo         TipoAnalise
+  referenciaId String      @db.Uuid
+  score        Int
+  resumo       String?
+  detalhes     Json        @default("{}")
+  modelo       String?
+  criadoEm     DateTime    @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, tipo, referenciaId])
+  @@map("ai_analysis")
+}
+
+// ───────────────────────── Convite (entrar em tenant existente) ─────────────────────────
+
+model Convite {
+  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId  String      @db.Uuid
+  email     String
+  papel     PapelUsuario @default(viewer)
+  token     String      @unique
+  status    AcaoConvite @default(pendente)
+  expiraEm  DateTime
+  criadoEm  DateTime    @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("convites")
+}
+
+// ───────────────────────── OTP (login por código) ─────────────────────────
+
+model OtpCode {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid
+  codigoHash String
+  expiraEm  DateTime
+  consumido Boolean  @default(false)
+  criadoEm  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("otp_codes")
 }

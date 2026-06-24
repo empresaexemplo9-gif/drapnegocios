@@ -2,25 +2,41 @@
   "name": "drap-business",
   "version": "0.1.0",
   "private": true,
-  "description": "DRAP Business — hub digital de negócios e conexões (MVP)",
+  "description": "DRAP Business — hub digital de negócios e conexões (multi-tenant)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate deploy",
+    "db:rls": "psql \"$DATABASE_URL\" -f prisma/rls.sql",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:setup": "prisma db push && npm run db:rls && npm run db:seed"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@prisma/client": "5.18.0",
+    "bcryptjs": "2.4.3",
     "next": "14.2.5",
+    "next-auth": "4.24.7",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "zod": "3.23.8"
   },
   "devDependencies": {
+    "@types/bcryptjs": "2.4.6",
     "@types/node": "20.14.12",
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
     "autoprefixer": "10.4.19",
     "postcss": "8.4.40",
+    "prisma": "5.18.0",
     "tailwindcss": "3.4.7",
+    "tsx": "4.16.5",
     "typescript": "5.5.4"
   }
 }
