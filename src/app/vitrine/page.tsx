@@ -72,8 +72,17 @@ export default async function VitrinePage({
           {itens.map((s) => (
             <div
               key={s.id}
-              className={`cartao flex flex-col ${s.destaque ? 'ring-2 ring-marca-400' : ''}`}
+              className={`cartao flex flex-col !p-0 overflow-hidden ${s.destaque ? 'ring-2 ring-marca-400' : ''}`}
             >
+              {s.imagemUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={s.imagemUrl} alt={s.nome} className="h-40 w-full object-cover" />
+              ) : (
+                <div className="grid h-40 w-full place-items-center bg-gradient-to-br from-ink-900 to-ink-700 text-xs text-white/50">
+                  {s.tipo === 'servico' ? 'Serviço' : 'Produto'}
+                </div>
+              )}
+              <div className="flex flex-1 flex-col p-5">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h3 className="font-bold text-tinta">{s.nome}</h3>
@@ -104,6 +113,7 @@ export default async function VitrinePage({
                   <dd className="font-semibold text-slate-700">{s.alcance}</dd>
                 </div>
               </dl>
+              </div>
             </div>
           ))}
         </div>

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { obterContexto } from '@/lib/server/session';
 import { carregarUsuario, salvarPerfil } from '@/lib/server/repos';
 import { obterPlano } from '@/lib/planos';
+import { UploadImagem } from '@/components/UploadImagem';
 
 export const metadata = { title: 'Meu painel' };
 
@@ -120,8 +121,18 @@ export default async function PainelPage({
           <div className="h-7" />
         </div>
 
-        <Campo nome="avatarUrl" rotulo="Foto de perfil (URL) — sua ou da marca/empresa" valor={u.avatarUrl} />
-        <Campo nome="bannerUrl" rotulo="Imagem de fundo / banner (URL)" valor={u.perfil?.bannerUrl ?? ''} />
+        <UploadImagem
+          name="avatarUrl"
+          label="Foto de perfil (sua ou da marca/empresa)"
+          defaultUrl={u.avatarUrl}
+          formato="avatar"
+        />
+        <UploadImagem
+          name="bannerUrl"
+          label="Imagem de fundo / banner"
+          defaultUrl={u.perfil?.bannerUrl ?? ''}
+          formato="banner"
+        />
         <Campo nome="representa" rotulo="Marca/empresa que representa (opcional)" valor={u.perfil?.representa ?? ''} />
         <Campo nome="areaAtuacao" rotulo="Área de atuação" valor={u.perfil?.areaAtuacao ?? ''} />
         <Campo nome="regiao" rotulo="Região" valor={u.perfil?.regiao ?? ''} />

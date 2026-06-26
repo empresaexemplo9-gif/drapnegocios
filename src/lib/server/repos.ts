@@ -553,6 +553,7 @@ export interface ItemVitrine {
   preco: string;
   regiao: string;
   descricao: string;
+  imagemUrl: string;
   /** Visibilidade por plano do vendedor (selo e alcance). */
   destaque: string | null;
   alcance: string;
@@ -562,6 +563,10 @@ function precoFmt(preco: unknown): string {
   const n = Number(preco);
   if (!Number.isFinite(n) || n <= 0) return 'Sob consulta';
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function primeiraImagem(imagens: unknown): string {
+  return Array.isArray(imagens) && typeof imagens[0] === 'string' ? imagens[0] : '';
 }
 
 export interface FiltrosVitrine {
@@ -606,6 +611,7 @@ export async function listarVitrine(f: FiltrosVitrine = {}): Promise<ItemVitrine
         preco: precoFmt(p.preco),
         regiao: p.regiaoAtendimento ?? 'Remoto',
         descricao: p.descricao,
+        imagemUrl: primeiraImagem(p.imagens),
         destaque: rotuloDestaque(plano),
         alcance: alcanceLabel(plano),
       } as ItemVitrine,
@@ -624,6 +630,7 @@ export interface NovoProduto {
   categoria: string;
   preco: string;
   regiao: string;
+  imagemUrl: string;
 }
 
 export async function criarProduto(tenantId: string, userId: string, dados: NovoProduto): Promise<void> {
@@ -640,6 +647,7 @@ export async function criarProduto(tenantId: string, userId: string, dados: Novo
         categoria: dados.categoria || null,
         preco: Number.isFinite(precoNum) && precoNum > 0 ? precoNum.toFixed(2) : null,
         regiaoAtendimento: dados.regiao || null,
+        imagens: dados.imagemUrl ? [dados.imagemUrl] : [],
         planoNoCadastro: (t?.plano ?? 'free') as never,
         // Relevância base; cresce com engajamento/atualizações na fase seguinte.
         scoreRelevancia: 50,
@@ -695,6 +703,7 @@ export async function itensDoPerfil(
       preco: precoFmt(p.preco),
       regiao: p.regiaoAtendimento ?? 'Remoto',
       descricao: p.descricao,
+      imagemUrl: primeiraImagem(p.imagens),
       destaque: rotuloDestaque(plano),
       alcance: alcanceLabel(plano),
     };

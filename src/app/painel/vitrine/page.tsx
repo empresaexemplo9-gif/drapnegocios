@@ -5,6 +5,7 @@ import { pode, type Papel } from '@/lib/rbac';
 import { obterPlano } from '@/lib/planos';
 import { alcanceLabel, rotuloDestaque } from '@/lib/visibilidade';
 import { meusProdutos, criarProduto, removerProduto } from '@/lib/server/repos';
+import { UploadImagem } from '@/components/UploadImagem';
 
 export const metadata = { title: 'Minha vitrine' };
 export const dynamic = 'force-dynamic';
@@ -31,6 +32,7 @@ export default async function MinhaVitrinePage({
       categoria: String(formData.get('categoria') ?? '').trim(),
       preco: String(formData.get('preco') ?? ''),
       regiao: String(formData.get('regiao') ?? '').trim(),
+      imagemUrl: String(formData.get('imagemUrl') ?? '').trim(),
     });
     redirect('/painel/vitrine?ok=1');
   }
@@ -125,6 +127,9 @@ export default async function MinhaVitrinePage({
           <Campo nome="categoria" rotulo="Categoria" />
           <Campo nome="preco" rotulo="Preço (R$) — vazio = sob consulta" obrig={false} />
           <Campo nome="regiao" rotulo="Região de atendimento" />
+          <div className="sm:col-span-2">
+            <UploadImagem name="imagemUrl" label="Imagem do produto/serviço" formato="item" />
+          </div>
           <label className="block sm:col-span-2">
             <span className="mb-1 block text-xs font-semibold text-slate-500">Descrição</span>
             <textarea
