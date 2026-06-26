@@ -1,24 +1,27 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { usuarioAtual } from '@/lib/sessao';
-import { atualizarPerfil, emTrial, planoVigente, type Usuario } from '@/lib/usuarios';
+import { obterContexto } from '@/lib/server/session';
+import { carregarUsuario, salvarPerfil } from '@/lib/server/repos';
 import { obterPlano } from '@/lib/planos';
-import type { TipoPerfil } from '@/lib/dados';
 
 export const metadata = { title: 'Meu painel' };
 
-const tipos: TipoPerfil[] = ['pessoa', 'empresa', 'autonomo', 'produto'];
+export default async function PainelPage({
+  searchParams,
+}: {
+  searchParams?: { salvo?: string };
+}) {
+  const ctx = await obterContexto();
+  if (!ctx) redirect('/entrar?proximo=/painel');
 
-export default function PainelPage() {
-  const usuario = usuarioAtual();
-  if (!usuario) redirect('/entrar');
+  const u = await carregarUsuario(ctx.tenantId, ctx.userId);
+  if (!u) redirect('/entrar');
 
   async function salvar(formData: FormData) {
     'use server';
-    const atual = usuarioAtual();
+    const atual = await obterContexto();
     if (!atual) redirect('/entrar');
-    atualizarPerfil(atual.id, {
-      tipo: String(formData.get('tipo') ?? 'pessoa') as TipoPerfil,
+    await salvarPerfil(atual.tenantId, atual.userId, {
       areaAtuacao: String(formData.get('areaAtuacao') ?? ''),
       regiao: String(formData.get('regiao') ?? ''),
       bio: String(formData.get('bio') ?? ''),
@@ -26,16 +29,19 @@ export default function PainelPage() {
     redirect('/painel?salvo=1');
   }
 
-  const u: Usuario = usuario;
+  const plano = obterPlano(u.plano);
   const completude = calcularCompletude(u);
-  const plano = obterPlano(planoVigente(u));
 
   return (
     <div className="container-app py-12">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-tinta">Olá, {u.nome.split(' ')[0]} 👋</h1>
-          <p className="text-slate-500">{u.email}</p>
+          <h1 className="text-3xl font-black tracking-tight text-tinta">
+            Olá, {u.nome.split(' ')[0]} 👋
+          </h1>
+          <p className="text-slate-500">
+            {u.email} · papel <strong className="capitalize">{u.papel.replace('_', ' ')}</strong>
+          </p>
         </div>
         <div className="text-right">
           <div className="text-2xl font-black text-marca-600">{completude}%</div>
@@ -43,65 +49,58 @@ export default function PainelPage() {
         </div>
       </div>
 
+      {searchParams?.salvo && (
+        <p className="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          Perfil salvo.
+        </p>
+      )}
+
       {/* Plano atual */}
       <div className="cartao mt-8 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2">
-            <span className={`selo ${plano.prime ? 'bg-marca-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
-              {plano.nome}
-            </span>
-            {emTrial(u) && <span className="selo bg-amber-100 text-amber-700">Teste grátis</span>}
-          </div>
+          <span
+            className={`selo ${plano.prime ? 'bg-marca-600 text-white' : 'bg-slate-100 text-slate-600'}`}
+          >
+            {plano.nome}
+          </span>
           <p className="mt-2 text-sm text-slate-600">
             {plano.prime
               ? 'IA de classificação de currículos e visibilidade direcionada ativas.'
               : 'Assine o Prime para a IA ranquear seus currículos e ampliar seu alcance.'}
           </p>
         </div>
-        <div className="flex gap-2">
-          {plano.prime ? (
-            <Link href="/painel/prime" className="btn-primario !py-2">
-              Painel de visibilidade
-            </Link>
-          ) : (
-            <Link href="/planos" className="btn-primario !py-2">
-              Conhecer o Prime
-            </Link>
-          )}
-        </div>
+        {plano.prime ? (
+          <Link href="/painel/prime" className="btn-primario !py-2">
+            Painel de visibilidade
+          </Link>
+        ) : (
+          <Link href="/planos" className="btn-primario !py-2">
+            Conhecer o Prime
+          </Link>
+        )}
+      </div>
+
+      {/* Atalhos */}
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Atalho href="/painel/vagas" titulo="Minhas vagas" desc="Publicar e gerir vagas, ver candidatos." />
+        <Atalho href="/painel/vitrine" titulo="Minha vitrine" desc="Produtos/serviços com visibilidade por plano." />
+        <Atalho href="/painel/prime" titulo="Ranking por IA" desc="Currículos pontuados e métricas." />
+        <Atalho href="/vagas" titulo="Banco de vagas" desc="Ver o board público da plataforma." />
       </div>
 
       <form action={salvar} className="cartao mt-8 grid gap-4 sm:grid-cols-2">
         <h2 className="font-bold text-tinta sm:col-span-2">Complete seu perfil</h2>
-
-        <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-slate-500">Tipo de perfil</span>
-          <select
-            name="tipo"
-            defaultValue={u.perfil.tipo}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm capitalize outline-none focus:border-marca-500"
-          >
-            {tipos.map((t) => (
-              <option key={t} value={t} className="capitalize">
-                {t}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <Campo nome="areaAtuacao" rotulo="Área de atuação" valor={u.perfil.areaAtuacao} />
-        <Campo nome="regiao" rotulo="Região" valor={u.perfil.regiao} />
-
+        <Campo nome="areaAtuacao" rotulo="Área de atuação" valor={u.perfil?.areaAtuacao ?? ''} />
+        <Campo nome="regiao" rotulo="Região" valor={u.perfil?.regiao ?? ''} />
         <label className="block sm:col-span-2">
           <span className="mb-1 block text-xs font-semibold text-slate-500">Bio</span>
           <textarea
             name="bio"
-            defaultValue={u.perfil.bio}
+            defaultValue={u.perfil?.bio ?? ''}
             rows={3}
             className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-marca-500"
           />
         </label>
-
         <div className="sm:col-span-2">
           <button className="btn-primario">Salvar perfil</button>
         </div>
@@ -110,10 +109,24 @@ export default function PainelPage() {
   );
 }
 
-function calcularCompletude(u: Usuario): number {
-  const campos = [u.nome, u.email, u.perfil.areaAtuacao, u.perfil.regiao, u.perfil.bio];
+function calcularCompletude(u: {
+  nome: string;
+  email: string;
+  perfil: { areaAtuacao: string; regiao: string; bio: string } | null;
+}): number {
+  const campos = [u.nome, u.email, u.perfil?.areaAtuacao, u.perfil?.regiao, u.perfil?.bio];
   const preenchidos = campos.filter((c) => c && c.trim().length > 0).length;
   return Math.round((preenchidos / campos.length) * 100);
+}
+
+function Atalho({ href, titulo, desc }: { href: string; titulo: string; desc: string }) {
+  return (
+    <Link href={href} className="cartao block">
+      <h3 className="font-bold text-tinta">{titulo}</h3>
+      <p className="mt-1 text-sm text-slate-600">{desc}</p>
+      <span className="mt-2 inline-block text-sm font-semibold text-marca-600">Abrir →</span>
+    </Link>
+  );
 }
 
 function Campo({ nome, rotulo, valor }: { nome: string; rotulo: string; valor: string }) {

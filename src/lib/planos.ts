@@ -9,6 +9,29 @@
 
 export type ChavePlano = 'free' | 'basico' | 'pro' | 'elite';
 
+/** Valor do enum `Plano` do banco (Prisma). */
+export type PlanoDb = 'free' | 'prime_basico' | 'prime_pro' | 'prime_elite';
+
+const DB_PARA_UI: Record<PlanoDb, ChavePlano> = {
+  free: 'free',
+  prime_basico: 'basico',
+  prime_pro: 'pro',
+  prime_elite: 'elite',
+};
+const UI_PARA_DB: Record<ChavePlano, PlanoDb> = {
+  free: 'free',
+  basico: 'prime_basico',
+  pro: 'prime_pro',
+  elite: 'prime_elite',
+};
+
+export function dePlanoDb(p: string): ChavePlano {
+  return DB_PARA_UI[p as PlanoDb] ?? 'free';
+}
+export function paraPlanoDb(c: ChavePlano): PlanoDb {
+  return UI_PARA_DB[c] ?? 'free';
+}
+
 /** Raio/nível de visibilidade direcionada (1–3) descrito na especificação. */
 export type NivelVisibilidade = 0 | 1 | 2 | 3;
 
@@ -43,7 +66,7 @@ const PADRAO: Record<ChavePlano, Plano> = {
       'Perfil unificado e vitrine',
       'Publicação de vagas e produtos',
       'Até 5 currículos classificados por mês',
-      'Match básico por habilidade e região',
+      'Visibilidade local para produtos, serviços e candidatura',
     ],
   },
   basico: {
@@ -59,7 +82,7 @@ const PADRAO: Record<ChavePlano, Plano> = {
       'Tudo do Free',
       'IA classifica até 50 currículos/mês',
       'Ranking automático com resumo por candidato',
-      'Visibilidade direcionada local/estadual',
+      'Selo "Destaque" e alcance estadual: produtos, serviços e seu currículo',
       'Painel de métricas de visibilidade',
     ],
   },
@@ -77,8 +100,8 @@ const PADRAO: Record<ChavePlano, Plano> = {
       'Tudo do Básico',
       'IA classifica até 200 currículos/mês',
       'Entrega proativa dos melhores talentos (sem candidatura ativa)',
-      'Produtos com visibilidade por intenção de compra',
-      'Relatório mensal de ROI',
+      'Destaque Pro: vendedores e candidatos priorizados, alcance nacional',
+      'Produtos com visibilidade por intenção de compra · relatório de ROI',
     ],
   },
   elite: {
@@ -94,7 +117,7 @@ const PADRAO: Record<ChavePlano, Plano> = {
       'Tudo do Pro',
       'IA classifica currículos ilimitados/mês',
       'Análise completa (experiência, certificações, referências, histórico)',
-      'Posição de destaque na home e no topo das buscas',
+      'Destaque Elite: topo da vitrine e do ranking + posição na home',
       'Curadoria proativa com maior raio de captação',
     ],
   },

@@ -1,11 +1,11 @@
 import { redirect } from 'next/navigation';
-import { usuarioAtual } from '@/lib/sessao';
+import { obterContexto } from '@/lib/server/session';
 import { Gerador } from './Gerador';
 
 export const metadata = { title: 'Marketing' };
 
-export default function MarketingPage() {
-  if (!usuarioAtual()) redirect('/entrar');
+export default async function MarketingPage() {
+  if (!(await obterContexto())) redirect('/entrar?proximo=/marketing');
 
   return (
     <div className="container-app py-12">
