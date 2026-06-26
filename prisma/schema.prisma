@@ -194,6 +194,7 @@ model User {
   participacoes Participante[]
   conversas     ConversaParticipante[]
   mensagensChat MensagemChat[]
+  posts         Post[]
 
   // E-mail único por tenant (mesmo e-mail pode existir em tenants distintos).
   @@unique([tenantId, email])
@@ -528,4 +529,21 @@ model MensagemChat {
 
   @@index([conversaId])
   @@map("mensagens_chat")
+}
+
+// ───────────────────────── Feed (publicações) ─────────────────────────
+
+model Post {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  autorId   String   @db.Uuid
+  tenantId  String?  @db.Uuid
+  texto     String
+  imagemUrl String?
+  criadoEm  DateTime @default(now())
+
+  autor User @relation(fields: [autorId], references: [id], onDelete: Cascade)
+
+  @@index([autorId])
+  @@index([criadoEm])
+  @@map("posts")
 }

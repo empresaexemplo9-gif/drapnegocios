@@ -196,6 +196,11 @@ export async function adicionarParticipante(
   return true;
 }
 
+export async function emailDoUsuario(userId: string): Promise<string | null> {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+  return u?.email ?? null;
+}
+
 export async function cancelarReuniao(reuniaoId: string, organizadorId: string): Promise<void> {
   await prisma.reuniao.updateMany({
     where: { id: reuniaoId, organizadorId },

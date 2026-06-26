@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/server/auth';
 import { SairBotao } from './SairBotao';
 
 const navItens = [
+  { href: '/feed', rotulo: 'Feed' },
   { href: '/perfil', rotulo: 'Perfis' },
   { href: '/vagas', rotulo: 'Vagas' },
   { href: '/vitrine', rotulo: 'Vitrine' },

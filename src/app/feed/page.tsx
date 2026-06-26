@@ -1,50 +1,58 @@
-import { feed, type TipoPost } from '@/lib/dados';
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { obterContexto } from '@/lib/server/session';
+import { feedGlobal, criarPost } from '@/lib/server/feed';
+import { Composer } from './Composer';
+import { PostCard } from './PostCard';
 
-const rotuloTipo: Record<TipoPost, { texto: string; classe: string }> = {
-  'busca-servico': { texto: 'Busca serviço', classe: 'bg-amber-100 text-amber-700' },
-  'busca-parceiro': { texto: 'Busca parceiro', classe: 'bg-marca-100 text-marca-700' },
-  disponivel: { texto: 'Disponível', classe: 'bg-emerald-100 text-emerald-700' },
-  produto: { texto: 'Produto', classe: 'bg-sky-100 text-sky-700' },
-};
+export const metadata = { title: 'Feed' };
+export const dynamic = 'force-dynamic';
 
-export default function FeedPage() {
+export default async function FeedPage() {
+  const ctx = await obterContexto();
+  const posts = await feedGlobal();
+
+  async function publicar(formData: FormData) {
+    'use server';
+    const atual = await obterContexto();
+    if (!atual) redirect('/entrar?proximo=/feed');
+    await criarPost(
+      atual.userId,
+      atual.tenantId,
+      String(formData.get('texto') ?? ''),
+      String(formData.get('imagemUrl') ?? '').trim(),
+    );
+    redirect('/feed');
+  }
+
   return (
     <div className="container-app py-12">
-      <h1 className="text-3xl font-black tracking-tight text-tinta">Rede de Captação</h1>
+      <h1 className="text-3xl font-black tracking-tight text-tinta">Feed</h1>
       <p className="mt-2 max-w-2xl text-slate-600">
-        O feed onde aparecem clientes buscando serviços, empresas buscando parceiros, profissionais
-        disponíveis e produtos à venda.
+        Publicações de empresas, profissionais e autônomos. Mostre seu trabalho, vagas, novidades e
+        conecte-se.
       </p>
 
-      <div className="mt-8 grid gap-4 lg:grid-cols-2">
-        {feed.map((post) => {
-          const r = rotuloTipo[post.tipo];
-          return (
-            <article key={post.id} className="cartao">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <span className="grid h-10 w-10 place-items-center rounded-full bg-marca-100 font-black text-marca-700">
-                    {post.autor.charAt(0)}
-                  </span>
-                  <div>
-                    <p className="font-bold text-tinta">{post.autor}</p>
-                    <p className="text-xs text-slate-400">
-                      {post.regiao} · {post.quando}
-                    </p>
-                  </div>
-                </div>
-                <span className={`selo ${r.classe}`}>{r.texto}</span>
-              </div>
+      <div className="mt-6">
+        {ctx ? (
+          <Composer acao={publicar} />
+        ) : (
+          <div className="cartao text-sm text-slate-600">
+            <Link href="/entrar?proximo=/feed" className="font-semibold text-marca-600">
+              Entre
+            </Link>{' '}
+            para publicar no feed.
+          </div>
+        )}
+      </div>
 
-              <p className="mt-3 text-sm text-slate-700">{post.texto}</p>
-
-              <div className="mt-4 flex gap-2">
-                <button className="btn-primario !px-4 !py-2">Conectar</button>
-                <button className="btn-secundario !px-4 !py-2">Mensagem</button>
-              </div>
-            </article>
-          );
-        })}
+      <div className="mt-6 grid gap-4">
+        {posts.length === 0 && (
+          <p className="cartao text-center text-sm text-slate-500">Ainda não há publicações.</p>
+        )}
+        {posts.map((p) => (
+          <PostCard key={p.id} post={p} />
+        ))}
       </div>
     </div>
   );

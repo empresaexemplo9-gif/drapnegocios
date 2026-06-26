@@ -3,6 +3,9 @@ import { notFound, redirect } from 'next/navigation';
 import { perfilPublicoPorId, itensDoPerfil } from '@/lib/server/repos';
 import { obterContexto } from '@/lib/server/session';
 import { iniciarConversaPorId } from '@/lib/server/chat';
+import { criarReuniao, emailDoUsuario } from '@/lib/server/agenda';
+import { postsDoPerfil } from '@/lib/server/feed';
+import { PostCard } from '@/app/feed/PostCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +20,7 @@ export default async function PerfilPublicoPage({ params }: { params: { id: stri
   const p = await perfilPublicoPorId(params.id);
   if (!p) notFound();
   const { produtos, vagas } = await itensDoPerfil(params.id);
+  const posts = await postsDoPerfil(params.id);
   const ctx = await obterContexto();
   const souEu = ctx?.userId === params.id;
 
@@ -26,6 +30,25 @@ export default async function PerfilPublicoPage({ params }: { params: { id: stri
     if (!atual) redirect(`/entrar?proximo=/perfil/${params.id}`);
     const id = await iniciarConversaPorId(atual.userId, params.id);
     redirect(id ? `/painel/chat/${id}` : '/painel/chat');
+  }
+
+  async function agendar() {
+    'use server';
+    const atual = await obterContexto();
+    if (!atual) redirect(`/entrar?proximo=/perfil/${params.id}`);
+    const email = await emailDoUsuario(params.id);
+    const id = await criarReuniao(
+      { id: atual.userId, tenantId: atual.tenantId, email: atual.email },
+      {
+        titulo: `Conversa com ${p?.nome ?? 'contato'}`,
+        tipo: 'reuniao',
+        descricao: '',
+        inicioEm: new Date(Date.now() + 3600_000),
+        duracaoMin: 30,
+      },
+      email ? [email] : [],
+    );
+    redirect(`/painel/agenda/${id}`);
   }
 
   return (
@@ -65,10 +88,19 @@ export default async function PerfilPublicoPage({ params }: { params: { id: stri
                   {ROTULO_TIPO[p.tipoProfile] ?? p.tipoProfile}
                 </span>
               </div>
-              {!souEu && (
-                <form action={conversar}>
-                  <button className="btn-primario !py-2">Conversar</button>
-                </form>
+              {!souEu ? (
+                <div className="flex flex-wrap gap-2">
+                  <form action={conversar}>
+                    <button className="btn-primario !py-2">Conversar</button>
+                  </form>
+                  <form action={agendar}>
+                    <button className="btn-secundario !py-2">Agendar reunião</button>
+                  </form>
+                </div>
+              ) : (
+                <Link href="/painel" className="btn-secundario !py-2">
+                  Editar meu perfil
+                </Link>
               )}
             </div>
             {p.representa && <p className="text-sm font-semibold text-marca-600">{p.representa}</p>}
@@ -79,6 +111,20 @@ export default async function PerfilPublicoPage({ params }: { params: { id: stri
           </div>
         </div>
       </div>
+
+      {/* Publicações do perfil */}
+      <section className="mt-8">
+        <h2 className="text-xl font-black text-tinta">Publicações</h2>
+        {posts.length === 0 ? (
+          <p className="cartao mt-4 text-sm text-slate-500">Nenhuma publicação ainda.</p>
+        ) : (
+          <div className="mt-4 grid gap-4">
+            {posts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* Produtos / serviços do perfil */}
       {produtos.length > 0 && (
