@@ -385,7 +385,12 @@ export async function candidatar(
         candidateId,
         curriculoUrl: dados.curriculoUrl || null,
         scoreIa: aval.score,
-        classificacaoIa: aval.criterios,
+        classificacaoIa: {
+          aderencia: aval.criterios.aderencia,
+          experiencia: aval.criterios.experiencia,
+          certificacoes: aval.criterios.certificacoes,
+          referencias: aval.criterios.referencias,
+        },
         status: 'em_analise',
       },
     });
