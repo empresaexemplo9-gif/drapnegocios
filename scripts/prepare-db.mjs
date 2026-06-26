@@ -17,9 +17,21 @@ if (!process.env.DATABASE_URL) {
   process.exit(0);
 }
 
+// Para o db push, prefira a conexão DIRETA (non-pooling) se existir — o pooler
+// (pgbouncer) pode falhar em operações de DDL. No runtime, o app continua
+// usando DATABASE_URL normalmente.
+const urlDireta =
+  process.env.DATABASE_URL_NON_POOLING ||
+  process.env.POSTGRES_URL_NON_POOLING ||
+  process.env.DATABASE_URL_UNPOOLED ||
+  process.env.DATABASE_URL;
+
 try {
   console.log('[prepare-db] aplicando schema (prisma db push)…');
-  execSync('npx prisma db push --skip-generate --accept-data-loss', { stdio: 'inherit' });
+  execSync('npx prisma db push --skip-generate --accept-data-loss', {
+    stdio: 'inherit',
+    env: { ...process.env, DATABASE_URL: urlDireta },
+  });
 } catch (e) {
   console.warn('[prepare-db] db push falhou (segue o build):', e?.message ?? e);
 }
