@@ -43,5 +43,7 @@ export const config = {
     '/api/applications/:path*',
     '/api/products/:path*',
     '/api/tenant/:path*',
+    '/api/chat/:path*',
+    '/api/upload/:path*',
   ],
 };

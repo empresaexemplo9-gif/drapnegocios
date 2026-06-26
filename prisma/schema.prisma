@@ -114,6 +114,11 @@ enum StatusParticipacao {
   recusado
 }
 
+enum TipoMensagem {
+  texto
+  convite
+}
+
 enum TipoAnalise {
   curriculo
   produto
@@ -187,6 +192,8 @@ model User {
   otpCodes     OtpCode[]
   reunioesOrganizadas Reuniao[]    @relation("OrganizadorReunioes")
   participacoes Participante[]
+  conversas     ConversaParticipante[]
+  mensagensChat MensagemChat[]
 
   // E-mail único por tenant (mesmo e-mail pode existir em tenants distintos).
   @@unique([tenantId, email])
@@ -477,4 +484,48 @@ model Participante {
   @@index([userId])
   @@index([reuniaoId])
   @@map("participantes")
+}
+
+// ───────────────────────── Chat ─────────────────────────
+
+model Conversa {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ultimaMsgEm DateTime @default(now())
+  criadoEm   DateTime @default(now())
+
+  participantes ConversaParticipante[]
+  mensagens     MensagemChat[]
+
+  @@map("conversas")
+}
+
+model ConversaParticipante {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversaId String   @db.Uuid
+  userId     String   @db.Uuid
+  criadoEm   DateTime @default(now())
+
+  conversa Conversa @relation(fields: [conversaId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversaId, userId])
+  @@index([userId])
+  @@map("conversa_participantes")
+}
+
+model MensagemChat {
+  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversaId String       @db.Uuid
+  autorId    String       @db.Uuid
+  tipo       TipoMensagem @default(texto)
+  texto      String
+  /// Quando tipo=convite, referencia a reunião compartilhada.
+  reuniaoId  String?      @db.Uuid
+  criadoEm   DateTime     @default(now())
+
+  conversa Conversa @relation(fields: [conversaId], references: [id], onDelete: Cascade)
+  autor    User     @relation(fields: [autorId], references: [id], onDelete: Cascade)
+
+  @@index([conversaId])
+  @@map("mensagens_chat")
 }

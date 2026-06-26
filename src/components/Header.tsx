@@ -7,8 +7,8 @@ const navItens = [
   { href: '/perfil', rotulo: 'Perfis' },
   { href: '/vagas', rotulo: 'Vagas' },
   { href: '/vitrine', rotulo: 'Vitrine' },
-  { href: '/feed', rotulo: 'Captação' },
   { href: '/painel/agenda', rotulo: 'Agenda' },
+  { href: '/painel/chat', rotulo: 'Chat' },
   { href: '/planos', rotulo: 'Planos' },
 ];
 

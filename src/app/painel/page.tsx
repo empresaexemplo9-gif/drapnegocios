@@ -90,6 +90,7 @@ export default async function PainelPage({
         <Atalho href="/painel/vagas" titulo="Minhas vagas" desc="Publicar e gerir vagas, ver candidatos." />
         <Atalho href="/painel/vitrine" titulo="Minha vitrine" desc="Produtos/serviços com visibilidade por plano." />
         <Atalho href="/painel/agenda" titulo="Agenda e calls" desc="Reuniões, entrevistas e negociações com sala de call." />
+        <Atalho href="/painel/chat" titulo="Chat" desc="Converse e envie convites de reunião na conversa." />
         <Atalho href="/painel/prime" titulo="Ranking por IA" desc="Currículos pontuados e métricas." />
         <Atalho href="/perfil" titulo="Buscar perfis" desc="Diretório de empresas, profissionais e candidatos." />
         <Atalho href="/vitrine" titulo="Vitrine" desc="Marketplace de produtos e serviços." />
@@ -100,13 +101,13 @@ export default async function PainelPage({
 
         {/* Pré-visualização banner + avatar */}
         <div className="sm:col-span-2">
-          <div className="relative h-32 w-full overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-ink-900 to-ink-700">
+          <div className="relative aspect-[29/10] w-full overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-ink-900 to-ink-700">
             {u.perfil?.bannerUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={u.perfil.bannerUrl} alt="banner" className="h-full w-full object-cover" />
+              <img src={u.perfil.bannerUrl} alt="banner" className="absolute inset-0 h-full w-full object-cover" />
             ) : (
               <span className="absolute inset-0 grid place-items-center text-xs text-white/60">
-                Banner (cole uma URL abaixo)
+                Banner recomendado: 1750×570 a 1900×680
               </span>
             )}
             <div className="absolute -bottom-6 left-4 h-16 w-16 overflow-hidden rounded-full border-4 border-white bg-marca-100">
@@ -131,7 +132,7 @@ export default async function PainelPage({
         />
         <UploadImagem
           name="bannerUrl"
-          label="Imagem de fundo / banner"
+          label="Banner (1750×570 a 1900×680)"
           defaultUrl={u.perfil?.bannerUrl ?? ''}
           formato="banner"
         />

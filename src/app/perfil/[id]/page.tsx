@@ -1,6 +1,8 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { perfilPublicoPorId, itensDoPerfil } from '@/lib/server/repos';
+import { obterContexto } from '@/lib/server/session';
+import { iniciarConversaPorId } from '@/lib/server/chat';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +17,16 @@ export default async function PerfilPublicoPage({ params }: { params: { id: stri
   const p = await perfilPublicoPorId(params.id);
   if (!p) notFound();
   const { produtos, vagas } = await itensDoPerfil(params.id);
+  const ctx = await obterContexto();
+  const souEu = ctx?.userId === params.id;
+
+  async function conversar() {
+    'use server';
+    const atual = await obterContexto();
+    if (!atual) redirect(`/entrar?proximo=/perfil/${params.id}`);
+    const id = await iniciarConversaPorId(atual.userId, params.id);
+    redirect(id ? `/painel/chat/${id}` : '/painel/chat');
+  }
 
   return (
     <div className="container-app py-8">
@@ -24,10 +36,11 @@ export default async function PerfilPublicoPage({ params }: { params: { id: stri
 
       {/* Banner + avatar */}
       <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
-        <div className="relative h-40 bg-gradient-to-br from-ink-900 to-ink-700 sm:h-56">
+        {/* Banner adaptável (~2.9:1, cobre 1750×570 até 1900×680) */}
+        <div className="relative aspect-[29/10] w-full bg-gradient-to-br from-ink-900 to-ink-700">
           {p.bannerUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={p.bannerUrl} alt="" className="h-full w-full object-cover" />
+            <img src={p.bannerUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
           )}
           {p.destaque && (
             <span className="selo absolute right-3 top-3 bg-marca-600 text-white">{p.destaque}</span>
@@ -45,11 +58,18 @@ export default async function PerfilPublicoPage({ params }: { params: { id: stri
             )}
           </div>
           <div className="pt-12">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-black text-tinta">{p.nome}</h1>
-              <span className="selo bg-slate-100 text-slate-600">
-                {ROTULO_TIPO[p.tipoProfile] ?? p.tipoProfile}
-              </span>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl font-black text-tinta">{p.nome}</h1>
+                <span className="selo bg-slate-100 text-slate-600">
+                  {ROTULO_TIPO[p.tipoProfile] ?? p.tipoProfile}
+                </span>
+              </div>
+              {!souEu && (
+                <form action={conversar}>
+                  <button className="btn-primario !py-2">Conversar</button>
+                </form>
+              )}
             </div>
             {p.representa && <p className="text-sm font-semibold text-marca-600">{p.representa}</p>}
             <p className="mt-1 text-sm text-slate-500">
