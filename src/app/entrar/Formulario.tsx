@@ -1,16 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { signIn, getProviders } from 'next-auth/react';
 import { politicaSenha } from '@/lib/password-policy';
 
-export function Formulario({
-  provedores = { google: false, linkedin: false },
-}: {
-  provedores?: { google: boolean; linkedin: boolean };
-}) {
+export function Formulario() {
   const router = useRouter();
+  const [sociais, setSociais] = useState<string[]>([]);
+
+  // Pergunta ao servidor (em tempo real) quais provedores sociais estão ativos.
+  useEffect(() => {
+    getProviders()
+      .then((p) => {
+        if (!p) return;
+        setSociais(
+          Object.values(p)
+            .map((x) => x.id)
+            .filter((id) => id !== 'credentials'),
+        );
+      })
+      .catch(() => setSociais([]));
+  }, []);
   const params = useSearchParams();
   const proximo = params.get('proximo') ?? '/painel';
   const [erro, setErro] = useState('');
@@ -85,9 +96,9 @@ export function Formulario({
           </p>
         )}
 
-        {(provedores.google || provedores.linkedin) && (
+        {sociais.length > 0 && (
           <div className="mt-6 grid gap-2">
-            {provedores.google && (
+            {sociais.includes('google') && (
               <button
                 onClick={() => signIn('google', { callbackUrl: proximo })}
                 className="btn-secundario w-full"
@@ -96,7 +107,7 @@ export function Formulario({
                 Entrar com Google
               </button>
             )}
-            {provedores.linkedin && (
+            {sociais.includes('linkedin') && (
               <button
                 onClick={() => signIn('linkedin', { callbackUrl: proximo })}
                 className="btn-secundario w-full"
