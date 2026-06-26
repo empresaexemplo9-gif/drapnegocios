@@ -6,6 +6,8 @@
  * Rate limited por IP. Senha validada pela política (8+/maiúscula/número/especial).
  */
 import { NextResponse } from 'next/server';
+import { randomBytes } from 'node:crypto';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/server/prisma';
 import { hashSenha } from '@/lib/server/password';
 import { slugUnico } from '@/lib/server/tenant';
@@ -13,6 +15,18 @@ import { registrarAudit } from '@/lib/server/audit';
 import { rateLimit } from '@/lib/server/rate-limit';
 import { cadastroSchema } from '@/lib/validation';
 import type { PapelUsuario, TipoProfile } from '@prisma/client';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+/** Identifica qual campo único colidiu num erro P2002 do Prisma. */
+function alvoUnico(e: unknown): string {
+  if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+    const t = e.meta?.target;
+    return Array.isArray(t) ? t.join(',') : String(t ?? '');
+  }
+  return '';
+}
 
 function ipDe(req: Request): string {
   return (
@@ -79,48 +93,82 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, tenantId: convite.tenantId, userId: user.id });
     }
 
-    // Caminho 1: criar novo tenant.
-    const slug = await slugUnico(nomeEmpresa ?? nome);
-    const { tenant, user } = await prisma.$transaction(async (tx) => {
-      const tenant = await tx.tenant.create({
-        data: { nome: nomeEmpresa ?? nome, slug, plano: 'free', statusAssinatura: 'trial' },
-      });
-      const user = await tx.user.create({
-        data: {
-          tenantId: tenant.id,
-          nome,
-          email: emailNorm,
-          senhaHash,
-          tipoPerfil,
-          papel: 'super_admin',
-          status: 'ativo',
-        },
-      });
-      await tx.profile.create({
-        data: { tenantId: tenant.id, userId: user.id, tipo: 'empresa_contratante' },
-      });
-      await tx.subscription.create({
-        data: { tenantId: tenant.id, plano: 'free', status: 'trial' },
-      });
-      return { tenant, user };
-    });
+    // Caminho 1: criar novo tenant (com retry caso o slug colida).
+    const baseEmpresa = nomeEmpresa && nomeEmpresa.trim().length >= 2 ? nomeEmpresa : nome;
+    let slug = await slugUnico(baseEmpresa);
+    let criado: { tenantSlug: string; userId: string; tenantId: string } | null = null;
+
+    for (let tentativa = 0; tentativa < 5 && !criado; tentativa++) {
+      try {
+        const slugAtual = slug;
+        const res = await prisma.$transaction(async (tx) => {
+          const tenant = await tx.tenant.create({
+            data: { nome: baseEmpresa, slug: slugAtual, plano: 'free', statusAssinatura: 'trial' },
+          });
+          const user = await tx.user.create({
+            data: {
+              tenantId: tenant.id,
+              nome,
+              email: emailNorm,
+              senhaHash,
+              tipoPerfil,
+              papel: 'super_admin',
+              status: 'ativo',
+            },
+          });
+          await tx.profile.create({
+            data: { tenantId: tenant.id, userId: user.id, tipo: 'empresa_contratante' },
+          });
+          await tx.subscription.create({
+            data: { tenantId: tenant.id, plano: 'free', status: 'trial' },
+          });
+          return { tenantSlug: tenant.slug, userId: user.id, tenantId: tenant.id };
+        });
+        criado = res;
+      } catch (e) {
+        const alvo = alvoUnico(e);
+        if (alvo.includes('email')) {
+          // Único caso real de "já cadastrado": e-mail repetido neste negócio.
+          return NextResponse.json(
+            { erro: 'Este e-mail já tem uma conta. Faça login ou use "Esqueci a senha".' },
+            { status: 409 },
+          );
+        }
+        if (alvo.includes('slug')) {
+          // Colisão de slug → tenta novamente com um sufixo aleatório.
+          slug = `${slug}-${randomBytes(2).toString('hex')}`;
+          continue;
+        }
+        throw e; // erro inesperado → cai no catch externo
+      }
+    }
+
+    if (!criado) {
+      return NextResponse.json(
+        { erro: 'Não foi possível criar a conta agora. Tente novamente.' },
+        { status: 500 },
+      );
+    }
 
     await registrarAudit({
-      tenantId: tenant.id,
-      userId: user.id,
+      tenantId: criado.tenantId,
+      userId: criado.userId,
       acao: 'tenant_criado',
       tabelaAfetada: 'tenants',
-      dadosNovos: { slug: tenant.slug },
+      dadosNovos: { slug: criado.tenantSlug },
       ip,
     });
-    return NextResponse.json({ ok: true, tenantSlug: tenant.slug, userId: user.id });
+    return NextResponse.json({ ok: true, tenantSlug: criado.tenantSlug, userId: criado.userId });
   } catch (e) {
-    // Violação de unicidade (email já existe no tenant) cai aqui.
-    const msg = e instanceof Error ? e.message : 'Erro ao cadastrar';
-    if (msg.includes('Unique') || msg.includes('unique')) {
-      return NextResponse.json({ erro: 'E-mail já cadastrado neste negócio.' }, { status: 409 });
+    const alvo = alvoUnico(e);
+    if (alvo.includes('email')) {
+      return NextResponse.json(
+        { erro: 'Este e-mail já tem uma conta. Faça login ou use "Esqueci a senha".' },
+        { status: 409 },
+      );
     }
-    return NextResponse.json({ erro: 'Erro ao cadastrar.' }, { status: 500 });
+    console.error('Erro no cadastro:', e);
+    return NextResponse.json({ erro: 'Erro ao cadastrar. Tente novamente.' }, { status: 500 });
   }
 }
 
