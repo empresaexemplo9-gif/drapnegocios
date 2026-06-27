@@ -110,7 +110,12 @@ export default async function PainelPage({
       </div>
 
       <form action={salvar} className="cartao mt-8 grid gap-4 sm:grid-cols-2">
-        <h2 className="font-bold text-tinta sm:col-span-2">Identidade do perfil</h2>
+        <div className="sm:col-span-2">
+          <h2 className="font-bold text-tinta">Editar perfil público</h2>
+          <p className="text-xs text-slate-500">
+            Foto e banner aparecem no seu perfil e no feed — valem para qualquer tipo de conta.
+          </p>
+        </div>
 
         {/* Pré-visualização banner + avatar */}
         <div className="sm:col-span-2">
