@@ -165,6 +165,7 @@ model Tenant {
   aiAnalyses    AiAnalysis[]
   convites      Convite[]
   leads         Lead[]
+  propostas     Proposta[]
 
   @@index([slug])
   @@map("tenants")
@@ -541,6 +542,29 @@ model MensagemChat {
 
   @@index([conversaId])
   @@map("mensagens_chat")
+}
+
+// ───────────────────────── Central de propostas ─────────────────────────
+
+model Proposta {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String   @db.Uuid
+  autorId      String   @db.Uuid
+  token        String   @unique
+  clienteNome  String
+  clienteEmail String?
+  titulo       String
+  /// Itens: [{ descricao, valor }]
+  itens        Json     @default("[]")
+  total        Decimal? @db.Decimal(12, 2)
+  validadeDias Int?
+  observacoes  String?
+  criadoEm     DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("propostas")
 }
 
 // ───────────────────────── Grupos e comunidades ─────────────────────────

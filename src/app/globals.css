@@ -27,3 +27,15 @@ body {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
   }
 }
+
+/* Impressão (proposta → PDF): esconde a navegação do site e o que tiver .no-print */
+@media print {
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}
