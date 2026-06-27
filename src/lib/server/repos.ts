@@ -8,6 +8,7 @@ import { withTenant, prisma } from './prisma';
 import { dePlanoDb, paraPlanoDb, type ChavePlano } from '../planos';
 import { classificarComIA } from './classificacao-ia';
 import { ordenarPorVisibilidade, rotuloDestaque, alcanceLabel } from '../visibilidade';
+import { pontuarPerfil } from './score';
 import type { Candidato } from '../candidatos';
 import type { Vaga as VagaMock } from '../dados';
 
@@ -114,6 +115,7 @@ export interface PerfilPublico {
   representa: string;
   bio: string;
   destaque: string | null;
+  score: number;
 }
 
 export interface FiltrosPerfil {
@@ -145,34 +147,78 @@ export async function buscarPerfis(f: FiltrosPerfil): Promise<PerfilPublico[]> {
           }
         : {}),
     },
-    include: { user: { select: { nome: true, avatarUrl: true, tipoPerfil: true } }, tenant: { select: { plano: true } } },
+    include: {
+      user: {
+        select: {
+          nome: true,
+          avatarUrl: true,
+          tipoPerfil: true,
+          _count: { select: { posts: true, products: true, jobs: true } },
+        },
+      },
+      tenant: { select: { plano: true } },
+    },
     take: 120,
   });
-  const mapeado = profs.map((p) => ({
-    perfil: {
-      id: p.userId,
-      nome: p.user.nome,
-      avatarUrl: p.user.avatarUrl ?? '',
-      bannerUrl: p.bannerUrl ?? '',
-      tipoPerfil: p.user.tipoPerfil,
-      tipoProfile: p.tipo,
-      areaAtuacao: p.areaAtuacao ?? '',
-      regiao: p.regiao ?? '',
-      representa: p.representa ?? '',
-      bio: p.bio ?? '',
-      destaque: rotuloDestaque(dePlanoDb(p.tenant.plano)),
-    } as PerfilPublico,
-    plano: dePlanoDb(p.tenant.plano),
-  }));
-  return ordenarPorVisibilidade(mapeado, () => 0, (x) => x.plano).map((x) => x.perfil);
+  const mapeado = profs.map((p) => {
+    const { score } = pontuarPerfil({
+      avatar: Boolean(p.user.avatarUrl),
+      banner: Boolean(p.bannerUrl),
+      bio: Boolean(p.bio),
+      area: Boolean(p.areaAtuacao),
+      regiao: Boolean(p.regiao),
+      representa: Boolean(p.representa),
+      posts: p.user._count.posts,
+      itens: p.user._count.products + p.user._count.jobs,
+    });
+    return {
+      perfil: {
+        id: p.userId,
+        nome: p.user.nome,
+        avatarUrl: p.user.avatarUrl ?? '',
+        bannerUrl: p.bannerUrl ?? '',
+        tipoPerfil: p.user.tipoPerfil,
+        tipoProfile: p.tipo,
+        areaAtuacao: p.areaAtuacao ?? '',
+        regiao: p.regiao ?? '',
+        representa: p.representa ?? '',
+        bio: p.bio ?? '',
+        destaque: rotuloDestaque(dePlanoDb(p.tenant.plano)),
+        score,
+      } as PerfilPublico,
+      plano: dePlanoDb(p.tenant.plano),
+    };
+  });
+  // Ordena por score do perfil + boost do plano.
+  return ordenarPorVisibilidade(mapeado, (x) => x.perfil.score, (x) => x.plano).map((x) => x.perfil);
 }
 
 export async function perfilPublicoPorId(userId: string): Promise<PerfilPublico | null> {
   const p = await prisma.profile.findFirst({
     where: { userId, visibilidadePublica: true },
-    include: { user: { select: { nome: true, avatarUrl: true, tipoPerfil: true } }, tenant: { select: { plano: true } } },
+    include: {
+      user: {
+        select: {
+          nome: true,
+          avatarUrl: true,
+          tipoPerfil: true,
+          _count: { select: { posts: true, products: true, jobs: true } },
+        },
+      },
+      tenant: { select: { plano: true } },
+    },
   });
   if (!p) return null;
+  const { score } = pontuarPerfil({
+    avatar: Boolean(p.user.avatarUrl),
+    banner: Boolean(p.bannerUrl),
+    bio: Boolean(p.bio),
+    area: Boolean(p.areaAtuacao),
+    regiao: Boolean(p.regiao),
+    representa: Boolean(p.representa),
+    posts: p.user._count.posts,
+    itens: p.user._count.products + p.user._count.jobs,
+  });
   return {
     id: p.userId,
     nome: p.user.nome,
@@ -185,6 +231,7 @@ export async function perfilPublicoPorId(userId: string): Promise<PerfilPublico 
     representa: p.representa ?? '',
     bio: p.bio ?? '',
     destaque: rotuloDestaque(dePlanoDb(p.tenant.plano)),
+    score,
   };
 }
 

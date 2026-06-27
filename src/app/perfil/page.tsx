@@ -110,11 +110,12 @@ export default async function PerfilDiretorioPage({
               </div>
             </div>
             <div className="px-4 pb-4 pt-8">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h3 className="font-bold text-tinta">{p.nome}</h3>
                 <span className="selo bg-slate-100 text-slate-600">
                   {ROTULO_TIPO[p.tipoProfile] ?? p.tipoProfile}
                 </span>
+                <span className="selo bg-marca-50 text-marca-700">Score {p.score}</span>
               </div>
               {p.representa && <p className="text-xs text-marca-600">{p.representa}</p>}
               <p className="mt-1 text-sm text-slate-500">

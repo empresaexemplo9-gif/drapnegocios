@@ -87,6 +87,9 @@ export default async function PerfilPublicoPage({ params }: { params: { id: stri
                 <span className="selo bg-slate-100 text-slate-600">
                   {ROTULO_TIPO[p.tipoProfile] ?? p.tipoProfile}
                 </span>
+                <span className="selo bg-marca-50 text-marca-700" title="Score do perfil (IA): completude + atividade">
+                  Score {p.score}
+                </span>
               </div>
               {!souEu ? (
                 <div className="flex flex-wrap gap-2">
