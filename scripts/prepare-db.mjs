@@ -16,10 +16,20 @@ import { execSync } from 'node:child_process';
 process.env.CHECKPOINT_DISABLE = '1';
 process.env.PRISMA_HIDE_UPDATE_MESSAGE = '1';
 
-if (!process.env.DATABASE_URL) {
-  console.warn('[prepare-db] DATABASE_URL ausente — pulando (configure o Postgres na Vercel).');
+// Aceita os vários nomes que a Vercel/Neon pode ter criado (depende do prefixo).
+const urlRuntime =
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_PRISMA_URL ||
+  process.env.POSTGRES_URL ||
+  process.env.STORAGE_PRISMA_URL ||
+  process.env.STORAGE_URL;
+
+if (!urlRuntime) {
+  console.warn('[prepare-db] Nenhuma URL de banco encontrada — pulando (conecte o Postgres na Vercel).');
   process.exit(0);
 }
+// Garante que o `prisma db push` (que lê env DATABASE_URL) tenha o valor.
+process.env.DATABASE_URL = urlRuntime;
 
 // Para o db push, prefira a conexão DIRETA (non-pooling) se existir — o pooler
 // (pgbouncer) pode falhar em operações de DDL. No runtime, o app continua
@@ -27,6 +37,7 @@ if (!process.env.DATABASE_URL) {
 const urlDireta =
   process.env.DATABASE_URL_NON_POOLING ||
   process.env.POSTGRES_URL_NON_POOLING ||
+  process.env.STORAGE_URL_NON_POOLING ||
   process.env.DATABASE_URL_UNPOOLED ||
   process.env.DATABASE_URL;
 

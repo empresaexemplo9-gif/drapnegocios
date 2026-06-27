@@ -11,12 +11,21 @@ import { PrismaClient, type Prisma } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as { __drapPrisma?: PrismaClient };
 
-// Fallback de URL: sem DATABASE_URL, `new PrismaClient()` lançaria exceção já
-// no carregamento do módulo, derrubando TODAS as páginas (inclusive as públicas
-// que nem usam banco). Com uma URL "placeholder", a inicialização nunca quebra;
-// um eventual erro só aparece na hora de consultar o banco (e é tratável).
-const databaseUrl =
-  process.env.DATABASE_URL ?? 'postgresql://placeholder:placeholder@localhost:5432/placeholder';
+// Resolve a URL do banco aceitando os vários nomes que a Vercel/Neon criam
+// conforme o prefixo escolhido (DATABASE_URL, POSTGRES_URL, STORAGE_URL…).
+// Sem nenhuma, usa um placeholder só pra inicialização não quebrar no load.
+function resolverUrlBanco(): string {
+  return (
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.DATABASE_PRISMA_URL ||
+    process.env.STORAGE_PRISMA_URL ||
+    process.env.STORAGE_URL ||
+    'postgresql://placeholder:placeholder@localhost:5432/placeholder'
+  );
+}
+const databaseUrl = resolverUrlBanco();
 
 export const prisma =
   globalForPrisma.__drapPrisma ??
