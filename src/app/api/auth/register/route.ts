@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  const { nome, email, senha, conviteToken, nomeEmpresa, tipoPerfil } = parse.data;
+  const { nome, email, senha, conviteToken, nomeEmpresa, tipoPerfil, tipoProfile } = parse.data;
   const emailNorm = email.toLowerCase();
   const senhaHash = await hashSenha(senha);
 
@@ -117,7 +117,7 @@ export async function POST(req: Request) {
             },
           });
           await tx.profile.create({
-            data: { tenantId: tenant.id, userId: user.id, tipo: 'empresa_contratante' },
+            data: { tenantId: tenant.id, userId: user.id, tipo: tipoProfile as never },
           });
           await tx.subscription.create({
             data: { tenantId: tenant.id, plano: 'free', status: 'trial' },

@@ -20,6 +20,9 @@ export const cadastroSchema = z.object({
   // Necessário ao criar um novo tenant (nome da empresa/negócio).
   nomeEmpresa: z.string().min(2).max(120).optional(),
   tipoPerfil: z.enum(['pessoa_fisica', 'empresa', 'autonomo']).default('pessoa_fisica'),
+  tipoProfile: z
+    .enum(['candidato', 'empresa_contratante', 'vendedor', 'comprador'])
+    .default('empresa_contratante'),
 });
 export type CadastroInput = z.infer<typeof cadastroSchema>;
 
