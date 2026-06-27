@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { obterContexto } from '@/lib/server/session';
 import { carregarUsuario, salvarPerfil } from '@/lib/server/repos';
+import { ehAdminPlataforma } from '@/lib/server/admin';
 import { obterPlano } from '@/lib/planos';
 import { UploadImagem } from '@/components/UploadImagem';
 
@@ -36,6 +37,7 @@ export default async function PainelPage({
 
   const plano = obterPlano(u.plano);
   const completude = calcularCompletude(u);
+  const admin = ehAdminPlataforma(ctx.email);
 
   return (
     <div className="container-app py-12">
@@ -53,6 +55,13 @@ export default async function PainelPage({
           <div className="text-xs font-semibold text-slate-400">perfil completo</div>
         </div>
       </div>
+
+      {admin && (
+        <Link href="/admin" className="mt-6 flex items-center justify-between rounded-xl border border-ink-900 bg-ink-950 px-4 py-3 text-white">
+          <span className="text-sm font-bold">🛠️ Admin da plataforma — edições e reparos</span>
+          <span className="text-sm font-semibold text-marca-300">Abrir →</span>
+        </Link>
+      )}
 
       {searchParams?.salvo && (
         <p className="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
