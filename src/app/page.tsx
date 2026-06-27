@@ -7,12 +7,12 @@ const modulos = [
   { nome: 'Rede de Captação', desc: 'Feed com quem busca, quem oferece e quem está disponível.', href: '/feed', mvp: true },
   { nome: 'Marketing Automatizado', desc: 'Crie uma vez, publique em todas as redes. Conteúdo com IA.', href: '/marketing', mvp: true },
   { nome: 'Planos e IA de Classificação', desc: 'Prime: IA lê e ranqueia currículos e dá visibilidade direcionada.', href: '/planos', mvp: true },
+  { nome: 'CRM Nativo', desc: 'Leads e contatos num funil visual por etapa.', href: '/painel/crm', mvp: true },
+  { nome: 'Central de Propostas', desc: 'Gera proposta com link público e PDF para o cliente.', href: '/painel/propostas', mvp: true },
+  { nome: 'Grupos e Comunidades', desc: 'Grupos por setor e região com mural de mensagens.', href: '/painel/grupos', mvp: true },
+  { nome: 'IA e Score de Perfil', desc: 'Pontua completude e atividade, ranqueando nas buscas.', href: '/perfil', mvp: true },
+  { nome: 'Motor de Engajamento', desc: 'Pontos e ranking por atividade na plataforma.', href: '/ranking', mvp: true },
   { nome: 'Integração com Redes Sociais', desc: 'OAuth com Instagram, LinkedIn, WhatsApp e TikTok.', href: null, mvp: false },
-  { nome: 'CRM Nativo', desc: 'Leads e candidatos caem num funil visual com histórico.', href: null, mvp: false },
-  { nome: 'Central de Propostas', desc: 'Gera proposta em PDF/link e dispara pelos canais.', href: null, mvp: false },
-  { nome: 'Grupos e Comunidades', desc: 'Grupos por setor e região para tráfego orgânico.', href: null, mvp: false },
-  { nome: 'IA e Score de Perfil', desc: 'Pontua completude e atividade, ranqueando nas buscas.', href: null, mvp: false },
-  { nome: 'Motor de Engajamento', desc: 'Pontos, ranking e recompensas por conexões e indicações.', href: null, mvp: false },
 ];
 
 export default function Home() {

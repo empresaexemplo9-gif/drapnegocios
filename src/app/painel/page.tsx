@@ -103,6 +103,7 @@ export default async function PainelPage({
         <Atalho href="/painel/crm" titulo="CRM" desc="Funil de leads e contatos do seu negócio." />
         <Atalho href="/painel/grupos" titulo="Grupos" desc="Comunidades por setor e região." />
         <Atalho href="/painel/propostas" titulo="Propostas" desc="Gere propostas e link em PDF para o cliente." />
+        <Atalho href="/ranking" titulo="Ranking" desc="Engajamento e recompensas por atividade." />
         <Atalho href="/painel/prime" titulo="Ranking por IA" desc="Currículos pontuados e métricas." />
         <Atalho href="/perfil" titulo="Buscar perfis" desc="Diretório de empresas, profissionais e candidatos." />
         <Atalho href="/vitrine" titulo="Vitrine" desc="Marketplace de produtos e serviços." />
