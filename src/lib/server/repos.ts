@@ -6,7 +6,7 @@
  */
 import { withTenant, prisma } from './prisma';
 import { dePlanoDb, paraPlanoDb, type ChavePlano } from '../planos';
-import { classificar } from '../classificacao';
+import { classificarComIA } from './classificacao-ia';
 import { ordenarPorVisibilidade, rotuloDestaque, alcanceLabel } from '../visibilidade';
 import type { Candidato } from '../candidatos';
 import type { Vaga as VagaMock } from '../dados';
@@ -507,7 +507,7 @@ export async function candidatar(
     descricao: job.descricao,
     salario: '',
   };
-  const aval = classificar(candidato, vaga);
+  const aval = await classificarComIA(candidato, vaga);
   const tenantId = job.tenantId;
 
   await withTenant(tenantId, async (db) => {
@@ -534,7 +534,7 @@ export async function candidatar(
         referenciaId: app.id,
         score: aval.score,
         resumo: aval.resumo,
-        modelo: 'heuristica-v1',
+        modelo: process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-6' : 'heuristica-v1',
       },
     });
   });
