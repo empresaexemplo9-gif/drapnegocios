@@ -14,6 +14,17 @@ export const dynamic = 'force-dynamic';
 
 const TIPOS_OK = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'];
 
+/** Diagnóstico: diz se o Vercel Blob está configurado (sem expor o token). */
+export async function GET() {
+  const ativo = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  return Response.json({
+    blobAtivo: ativo,
+    mensagem: ativo
+      ? 'Vercel Blob ativo: uploads de imagem funcionam.'
+      : 'Vercel Blob NÃO configurado: defina BLOB_READ_WRITE_TOKEN na Vercel.',
+  });
+}
+
 export async function POST(req: Request) {
   const ctx = await obterContexto();
   if (!ctx) return Response.json({ erro: 'Não autenticado' }, { status: 403 });
