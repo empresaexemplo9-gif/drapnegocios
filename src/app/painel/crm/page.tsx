@@ -12,6 +12,7 @@ import {
   normalizarTipo,
   type Etapa,
 } from '@/lib/server/crm';
+import { criarPropostaDeLead } from '@/lib/server/propostas';
 
 export const metadata = { title: 'CRM' };
 export const dynamic = 'force-dynamic';
@@ -49,6 +50,13 @@ export default async function CrmPage({ searchParams }: { searchParams?: { ok?: 
     if (!a) redirect('/entrar');
     await excluirLead(a.tenantId, String(formData.get('id') ?? ''));
     redirect('/painel/crm');
+  }
+  async function virarProposta(formData: FormData) {
+    'use server';
+    const a = await obterContexto();
+    if (!a) redirect('/entrar');
+    const token = await criarPropostaDeLead(a.tenantId, a.userId, String(formData.get('id') ?? ''));
+    redirect(token ? `/proposta/${token}` : '/painel/crm');
   }
 
   const [leads, slug] = await Promise.all([listarLeads(ctx.tenantId), slugDoTenant(ctx.tenantId)]);
@@ -135,6 +143,14 @@ export default async function CrmPage({ searchParams }: { searchParams?: { ok?: 
                         <button className="text-[11px] font-semibold text-rose-600">excluir</button>
                       </form>
                     </div>
+                    {l.etapa !== 'ganho' && l.etapa !== 'perdido' && (
+                      <form action={virarProposta} className="mt-2">
+                        <input type="hidden" name="id" value={l.id} />
+                        <button className="w-full rounded-lg bg-marca-50 py-1 text-[11px] font-bold text-marca-700 hover:bg-marca-100">
+                          → Virar proposta
+                        </button>
+                      </form>
+                    )}
                   </div>
                 ))}
                 {itens.length === 0 && <p className="px-1 text-xs text-slate-400">—</p>}

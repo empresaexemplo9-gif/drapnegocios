@@ -113,6 +113,15 @@ export default async function VitrinePage({
                   <dd className="font-semibold text-slate-700">{s.alcance}</dd>
                 </div>
               </dl>
+
+              {s.vendedorId && (
+                <Link
+                  href={`/perfil/${s.vendedorId}?interesse=${encodeURIComponent(s.nome)}&tipo=${s.tipo === 'servico' ? 'servico' : 'produto'}#contato`}
+                  className="btn-primario mt-4 !py-2 text-center"
+                >
+                  Tenho interesse
+                </Link>
+              )}
               </div>
             </div>
           ))}

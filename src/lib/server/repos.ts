@@ -595,6 +595,7 @@ export interface ItemVitrine {
   id: string;
   nome: string;
   vendedor: string;
+  vendedorId: string; // userId do vendedor (p/ captação de lead)
   tipo: string; // produto | servico
   categoria: string;
   preco: string;
@@ -653,6 +654,7 @@ export async function listarVitrine(f: FiltrosVitrine = {}): Promise<ItemVitrine
         id: p.id,
         nome: p.nome,
         vendedor: p.seller?.nome ?? p.tenant.nome,
+        vendedorId: p.sellerId,
         tipo: p.tipo,
         categoria: p.categoria ?? 'Geral',
         preco: precoFmt(p.preco),
@@ -745,6 +747,7 @@ export async function itensDoPerfil(
       id: p.id,
       nome: p.nome,
       vendedor: p.seller?.nome ?? p.tenant.nome,
+      vendedorId: p.sellerId,
       tipo: p.tipo,
       categoria: p.categoria ?? 'Geral',
       preco: precoFmt(p.preco),

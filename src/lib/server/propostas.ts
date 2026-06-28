@@ -61,6 +61,36 @@ export async function criarProposta(tenantId: string, userId: string, dados: Nov
   return token;
 }
 
+/** Cria uma proposta já preenchida a partir de um lead do CRM e move-o para "Proposta". */
+export async function criarPropostaDeLead(
+  tenantId: string,
+  userId: string,
+  leadId: string,
+): Promise<string | null> {
+  const lead = (await withTenant(tenantId, (db) =>
+    db.lead.findFirst({ where: { id: leadId, tenantId } }),
+  )) as { nome: string; email: string | null; descricao: string | null; valor: unknown } | null;
+  if (!lead) return null;
+
+  const valor = Number(lead.valor ?? 0);
+  const descricaoItem = (lead.descricao || lead.nome || 'Serviço/produto').trim();
+  const itensTexto = valor > 0 ? `${descricaoItem} | ${valor}` : descricaoItem;
+
+  const token = await criarProposta(tenantId, userId, {
+    clienteNome: lead.nome,
+    clienteEmail: lead.email ?? '',
+    titulo: lead.descricao ? `Proposta — ${descricaoItem}`.slice(0, 80) : 'Proposta comercial',
+    itensTexto,
+    validadeDias: '15',
+    observacoes: '',
+  });
+
+  await withTenant(tenantId, (db) =>
+    db.lead.updateMany({ where: { id: leadId, tenantId }, data: { etapa: 'proposta' as never } }),
+  );
+  return token;
+}
+
 export interface PropostaItem {
   token: string;
   titulo: string;
