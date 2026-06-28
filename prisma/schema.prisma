@@ -127,6 +127,17 @@ enum EtapaLead {
   perdido
 }
 
+enum TipoLead {
+  servico
+  produto
+  empresa
+  orcamento
+  agendamento
+  recrutamento
+  parceria
+  outro
+}
+
 enum TipoAnalise {
   curriculo
   produto
@@ -638,6 +649,8 @@ model Lead {
   email        String?
   telefone     String?
   origem       String?
+  tipo         TipoLead  @default(servico)
+  descricao    String?
   valor        Decimal?  @db.Decimal(12, 2)
   etapa        EtapaLead @default(novo)
   notas        String?

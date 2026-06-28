@@ -4,6 +4,7 @@ import { perfilPublicoPorId, itensDoPerfil } from '@/lib/server/repos';
 import { obterContexto } from '@/lib/server/session';
 import { iniciarConversaPorId } from '@/lib/server/chat';
 import { criarReuniao, emailDoUsuario } from '@/lib/server/agenda';
+import { captarDeUsuario, normalizarTipo, TIPOS_LEAD } from '@/lib/server/crm';
 import { postsDoPerfil } from '@/lib/server/feed';
 import { PostCard } from '@/app/feed/PostCard';
 
@@ -16,13 +17,38 @@ const ROTULO_TIPO: Record<string, string> = {
   comprador: 'Comprador',
 };
 
-export default async function PerfilPublicoPage({ params }: { params: { id: string } }) {
+export default async function PerfilPublicoPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams?: { interesse?: string; tipo?: string; enviado?: string };
+}) {
   const p = await perfilPublicoPorId(params.id);
   if (!p) notFound();
   const { produtos, vagas } = await itensDoPerfil(params.id);
   const posts = await postsDoPerfil(params.id);
   const ctx = await obterContexto();
   const souEu = ctx?.userId === params.id;
+
+  async function solicitar(formData: FormData) {
+    'use server';
+    const nome = String(formData.get('nome') ?? '').trim();
+    if (!nome) redirect(`/perfil/${params.id}#contato`);
+    await captarDeUsuario(
+      params.id,
+      {
+        nome,
+        email: String(formData.get('email') ?? '').trim(),
+        telefone: String(formData.get('telefone') ?? '').trim(),
+        tipo: normalizarTipo(formData.get('tipo')),
+        descricao: String(formData.get('descricao') ?? '').trim(),
+        valor: '',
+      },
+      'Perfil',
+    );
+    redirect(`/perfil/${params.id}?enviado=1#contato`);
+  }
 
   async function conversar() {
     'use server';
@@ -96,6 +122,7 @@ export default async function PerfilPublicoPage({ params }: { params: { id: stri
                   <form action={conversar}>
                     <button className="btn-primario !py-2">Conversar</button>
                   </form>
+                  <a href="#contato" className="btn-primario !py-2">Solicitar orçamento</a>
                   <form action={agendar}>
                     <button className="btn-secundario !py-2">Agendar reunião</button>
                   </form>
@@ -114,6 +141,75 @@ export default async function PerfilPublicoPage({ params }: { params: { id: stri
           </div>
         </div>
       </div>
+
+      {/* Captação: solicitar orçamento / demonstrar interesse */}
+      {!souEu && (
+        <section id="contato" className="mt-8">
+          <div className="cartao">
+            <h2 className="text-xl font-black text-tinta">Solicitar orçamento / Tenho interesse</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Envie seu contato para {p.nome}. Sem cadastro — chega direto no funil de quem oferece.
+            </p>
+            {searchParams?.enviado && (
+              <p className="mt-3 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                Contato enviado! {p.nome} recebe seu pedido e retorna em breve.
+              </p>
+            )}
+            <form action={solicitar} className="mt-4 grid gap-4 sm:grid-cols-2">
+              <label className="block">
+                <span className="mb-1 block text-xs font-semibold text-slate-500">Seu nome *</span>
+                <input
+                  name="nome"
+                  required
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-marca-500"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-semibold text-slate-500">Tipo de interesse</span>
+                <select
+                  name="tipo"
+                  defaultValue={normalizarTipo(searchParams?.tipo)}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-marca-500"
+                >
+                  {TIPOS_LEAD.map((t) => (
+                    <option key={t.v} value={t.v}>
+                      {t.r}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-semibold text-slate-500">E-mail</span>
+                <input
+                  name="email"
+                  type="email"
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-marca-500"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-semibold text-slate-500">Telefone / WhatsApp</span>
+                <input
+                  name="telefone"
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-marca-500"
+                />
+              </label>
+              <label className="block sm:col-span-2">
+                <span className="mb-1 block text-xs font-semibold text-slate-500">O que você precisa?</span>
+                <textarea
+                  name="descricao"
+                  rows={3}
+                  defaultValue={searchParams?.interesse ?? ''}
+                  placeholder="Descreva o serviço, produto ou pedido…"
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-marca-500"
+                />
+              </label>
+              <div className="sm:col-span-2">
+                <button className="btn-primario">Enviar contato</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      )}
 
       {/* Publicações do perfil */}
       <section className="mt-8">
@@ -142,6 +238,14 @@ export default async function PerfilPublicoPage({ params }: { params: { id: stri
                 </div>
                 <p className="mt-2 line-clamp-2 text-sm text-slate-600">{s.descricao}</p>
                 <p className="mt-3 text-sm font-bold text-marca-700">{s.preco}</p>
+                {!souEu && (
+                  <a
+                    href={`/perfil/${params.id}?interesse=${encodeURIComponent(s.nome)}&tipo=${s.tipo === 'servico' ? 'servico' : 'produto'}#contato`}
+                    className="mt-3 inline-block text-sm font-semibold text-marca-600"
+                  >
+                    Tenho interesse →
+                  </a>
+                )}
               </div>
             ))}
           </div>

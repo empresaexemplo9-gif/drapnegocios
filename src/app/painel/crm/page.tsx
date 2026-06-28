@@ -1,6 +1,17 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { obterContexto } from '@/lib/server/session';
-import { listarLeads, criarLead, moverLead, excluirLead, ETAPAS, type Etapa } from '@/lib/server/crm';
+import {
+  listarLeads,
+  criarLead,
+  moverLead,
+  excluirLead,
+  slugDoTenant,
+  ETAPAS,
+  TIPOS_LEAD,
+  normalizarTipo,
+  type Etapa,
+} from '@/lib/server/crm';
 
 export const metadata = { title: 'CRM' };
 export const dynamic = 'force-dynamic';
@@ -17,7 +28,9 @@ export default async function CrmPage({ searchParams }: { searchParams?: { ok?: 
       nome: String(formData.get('nome') ?? '').trim(),
       email: String(formData.get('email') ?? '').trim(),
       telefone: String(formData.get('telefone') ?? '').trim(),
-      origem: String(formData.get('origem') ?? '').trim(),
+      origem: String(formData.get('origem') ?? '').trim() || 'Manual',
+      tipo: normalizarTipo(formData.get('tipo')),
+      descricao: String(formData.get('descricao') ?? '').trim(),
       valor: String(formData.get('valor') ?? ''),
       notas: String(formData.get('notas') ?? '').trim(),
     });
@@ -38,15 +51,39 @@ export default async function CrmPage({ searchParams }: { searchParams?: { ok?: 
     redirect('/painel/crm');
   }
 
-  const leads = await listarLeads(ctx.tenantId);
+  const [leads, slug] = await Promise.all([listarLeads(ctx.tenantId), slugDoTenant(ctx.tenantId)]);
   const porEtapa = (e: Etapa) => leads.filter((l) => l.etapa === e);
+  const base = process.env.NEXTAUTH_URL?.replace(/\/$/, '') ?? '';
+  const linkCaptura = slug ? `${base}/c/${slug}` : '';
 
   return (
     <div className="container-app py-12">
-      <h1 className="text-3xl font-black tracking-tight text-tinta">CRM — funil de leads</h1>
+      <h1 className="text-3xl font-black tracking-tight text-tinta">CRM — captação e funil</h1>
       <p className="mt-2 max-w-2xl text-slate-600">
-        Cadastre leads/contatos e mova pelo funil até fechar. Tudo do seu negócio, isolado.
+        Capte clientes para serviços, produtos, B2B, orçamentos, agendamentos e recrutamento — e
+        mova cada lead pelo funil até fechar. Tudo do seu negócio, isolado.
       </p>
+
+      {/* Link público de captação */}
+      {slug && (
+        <div className="cartao mt-6">
+          <h2 className="font-bold text-tinta">Seu link de captação</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Compartilhe no WhatsApp, bio, anúncio ou e-mail. Quem preencher cai direto no seu funil —
+            mesmo sem ter conta.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <input
+              readOnly
+              value={linkCaptura || `/c/${slug}`}
+              className="flex-1 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+            />
+            <Link href={`/c/${slug}`} target="_blank" className="btn-secundario !py-2">
+              Abrir página
+            </Link>
+          </div>
+        </div>
+      )}
 
       {searchParams?.ok && (
         <p className="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">Lead adicionado.</p>
@@ -65,11 +102,15 @@ export default async function CrmPage({ searchParams }: { searchParams?: { ok?: 
               <div className="space-y-2">
                 {itens.map((l) => (
                   <div key={l.id} className="cartao !p-3">
-                    <p className="font-bold text-tinta">{l.nome}</p>
-                    {l.valor && <p className="text-xs font-semibold text-marca-600">{l.valor}</p>}
+                    <div className="flex items-start justify-between gap-1">
+                      <p className="font-bold text-tinta">{l.nome}</p>
+                    </div>
+                    <span className="selo mt-1 bg-marca-50 text-[10px] text-marca-700">{l.tipoRotulo}</span>
+                    {l.valor && <p className="mt-1 text-xs font-semibold text-marca-600">{l.valor}</p>}
                     {(l.email || l.telefone) && (
                       <p className="text-xs text-slate-500">{l.email || l.telefone}</p>
                     )}
+                    {l.descricao && <p className="mt-1 text-xs text-slate-600">{l.descricao}</p>}
                     {l.origem && <p className="text-[11px] text-slate-400">via {l.origem}</p>}
                     {l.notas && <p className="mt-1 text-xs text-slate-600">{l.notas}</p>}
 
@@ -105,13 +146,34 @@ export default async function CrmPage({ searchParams }: { searchParams?: { ok?: 
 
       {/* Adicionar lead */}
       <form action={adicionar} className="cartao mt-8 grid gap-4 sm:grid-cols-2">
-        <h2 className="font-bold text-tinta sm:col-span-2">Adicionar lead</h2>
+        <h2 className="font-bold text-tinta sm:col-span-2">Adicionar lead manualmente</h2>
         <Campo nome="nome" rotulo="Nome" obrig />
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-slate-500">Tipo de captação</span>
+          <select
+            name="tipo"
+            defaultValue="servico"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-marca-500"
+          >
+            {TIPOS_LEAD.map((t) => (
+              <option key={t.v} value={t.v}>
+                {t.r}
+              </option>
+            ))}
+          </select>
+        </label>
         <Campo nome="email" rotulo="E-mail" tipo="email" />
         <Campo nome="telefone" rotulo="Telefone" />
         <Campo nome="origem" rotulo="Origem (ex.: Instagram, indicação)" />
         <Campo nome="valor" rotulo="Valor potencial (R$)" />
-        <Campo nome="notas" rotulo="Notas" />
+        <label className="block sm:col-span-2">
+          <span className="mb-1 block text-xs font-semibold text-slate-500">O que o cliente precisa / notas</span>
+          <textarea
+            name="descricao"
+            rows={2}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-marca-500"
+          />
+        </label>
         <div className="sm:col-span-2">
           <button className="btn-primario">Adicionar ao funil</button>
         </div>
