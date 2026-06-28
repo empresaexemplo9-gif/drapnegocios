@@ -1,9 +1,69 @@
-<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="96" fill="#FFFFFF"/>
-  <g transform="translate(20,20) scale(8.3)">
-    <g transform="translate(-20.313877,-5.9799966)">
-      <path d="M 65.409444,6.6238851 39.434802,62.874198 h 22.174874 c 8.607065,0 15.537036,-9.612729 15.537036,-21.552689 V 27.53217 c 0,-10.120369 -4.978535,-18.5684503 -11.737268,-20.9082849 z" fill="#0B1018"/>
-      <path d="m 20.363098,5.9799967 c -0.0766,18.9658603 -0.05366,37.9282243 0,56.8942013 H 39.153682 L 62.755859,6.0373576 c -0.378431,-0.037937 -0.760546,-0.057361 -1.146183,-0.057361 z" fill="#0B1018"/>
-    </g>
-  </g>
-</svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="100mm"
+   height="100mm"
+   viewBox="0 0 100 99.999999"
+   version="1.1"
+   id="svg1"
+   xml:space="preserve"
+   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
+   sodipodi:docname="DRAP Savicon business.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showguides="false"
+     inkscape:zoom="1.4142136"
+     inkscape:cx="259.86174"
+     inkscape:cy="109.248"
+     inkscape:window-width="1920"
+     inkscape:window-height="991"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" /><defs
+     id="defs1" /><g
+     inkscape:label="Camada 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0.90537423,13.87517)"><rect
+       style="fill:#0e1420;fill-opacity:1;fill-rule:evenodd;stroke-width:0.348441"
+       id="rect1"
+       width="100"
+       height="100"
+       x="-0.90537423"
+       y="-13.87517"
+       rx="20.897148" /><g
+       id="g1"
+       transform="translate(0.36433105,1.6977329)"><path
+         d="M 65.409444,6.6238851 39.434802,62.874198 h 22.174874 c 8.607065,0 15.537036,-9.612729 15.537036,-21.552689 V 27.53217 c 0,-10.120369 -4.978535,-18.5684503 -11.737268,-20.9082849 z"
+         style="fill:#ed3a1c;fill-opacity:1;fill-rule:evenodd;stroke-width:0.205066"
+         id="path3" /><path
+         d="m 20.363098,5.9799967 c -0.0766,18.9658603 -0.05366,37.9282243 0,56.8942013 H 39.153682 L 62.755859,6.0373576 c -0.378431,-0.037937 -0.760546,-0.057361 -1.146183,-0.057361 z"
+         style="fill:#ed3a1c;fill-opacity:1;fill-rule:evenodd;stroke-width:0.205066"
+         id="path2" /></g><text
+       xml:space="preserve"
+       style="font-weight:bold;font-size:3.88056px;line-height:0;font-family:Monospace;-inkscape-font-specification:'Monospace, Bold';letter-spacing:13.2292px;writing-mode:lr-tb;direction:ltr;fill:#00ff3a;fill-opacity:1;stroke:#c9a961;stroke-width:0.2;stroke-linecap:round;stroke-linejoin:round"
+       x="110.94358"
+       y="68.848633"
+       id="text1"><tspan
+         sodipodi:role="line"
+         id="tspan1"
+         style="stroke-width:0.2"
+         x="110.94358"
+         y="68.848633" /></text></g><g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Camada 2"
+     transform="translate(0.90537423,13.87517)" /></svg>
