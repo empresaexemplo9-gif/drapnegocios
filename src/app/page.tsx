@@ -30,7 +30,7 @@ export default function Home() {
             captação — tudo em um só lugar, para empresas, profissionais e autônomos.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/entrar?aba=criar" className="btn-primario">
+            <Link href="/entrar?aba=criar" className="btn-acento">
               Criar meu perfil
             </Link>
             <Link href="/feed" className="btn-secundario !border-white/30 !bg-transparent !text-white hover:!border-white hover:!text-white">

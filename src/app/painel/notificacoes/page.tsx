@@ -50,7 +50,7 @@ export default async function NotificacoesPage() {
             <div
               key={n.id}
               className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${
-                n.lido ? 'border-slate-200 bg-white' : 'border-marca-200 bg-marca-50'
+                n.lido ? 'border-ink-100 superficie' : 'border-marca-200 bg-marca-50'
               }`}
             >
               <Icon name={ICONE[n.tipo] ?? 'bell'} size={18} className="mt-0.5 text-marca-500" />

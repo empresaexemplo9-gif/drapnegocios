@@ -6,7 +6,7 @@ export default function InstalarPage() {
   return (
     <div className="container-app py-12">
       <div className="mx-auto max-w-lg text-center">
-        <span className="grid mx-auto h-16 w-16 place-items-center overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <span className="superficie grid mx-auto h-16 w-16 place-items-center overflow-hidden rounded-2xl border border-ink-100 shadow-sm">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icon.svg" alt="DRAP" className="h-full w-full" />
         </span>

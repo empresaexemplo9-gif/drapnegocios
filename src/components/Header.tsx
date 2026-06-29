@@ -32,14 +32,14 @@ export async function Header() {
   const admin = ehAdminPlataforma(usuario?.email);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-ink-800 bg-ink-950/95 text-creme backdrop-blur">
       <div className="container-app flex h-16 items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           {/* Menu lateral (≡) com todas as opções — estilo redes sociais */}
           <MenuDrawer logado={Boolean(usuario)} admin={admin} nome={usuario?.name} />
           <Link href="/" className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/drap-logo-ink.svg" alt="DRAP Business" className="h-9 w-auto" />
+            <img src="/drap-logo.svg" alt="DRAP Business" className="h-9 w-auto" />
           </Link>
         </div>
 
@@ -48,7 +48,7 @@ export async function Header() {
             <Link
               key={i.href}
               href={i.href}
-              className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-marca-700"
+              className="rounded-lg px-3 py-2 text-sm font-semibold text-ink-100 transition hover:bg-white/10 hover:text-white"
             >
               {i.rotulo}
             </Link>
@@ -60,25 +60,25 @@ export async function Header() {
             <Link
               href="/painel/notificacoes"
               aria-label="Notificações"
-              className="relative rounded-lg p-2 text-marca-500 hover:bg-marca-50 hover:text-marca-700"
+              className="relative rounded-lg p-2 text-marca-400 hover:bg-white/10 hover:text-marca-300"
             >
               <Icon name="bell" size={20} />
               {naoLidas > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
+                <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-marca-500 px-1 text-[10px] font-bold text-white">
                   {naoLidas > 9 ? '9+' : naoLidas}
                 </span>
               )}
             </Link>
             <Link
               href="/painel"
-              className="hidden rounded-lg px-3 py-2 text-sm font-bold text-marca-700 hover:bg-marca-50 sm:block"
+              className="hidden rounded-lg px-3 py-2 text-sm font-bold text-ink-100 hover:bg-white/10 hover:text-white sm:block"
             >
               {(usuario.name ?? 'Conta').split(' ')[0]}
             </Link>
             <SairBotao />
           </div>
         ) : (
-          <Link href="/entrar" className="btn-primario !px-4 !py-2">
+          <Link href="/entrar" className="btn-acento !px-4 !py-2">
             Entrar
           </Link>
         )}

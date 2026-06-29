@@ -67,7 +67,7 @@ export function MenuDrawer({
         type="button"
         aria-label="Abrir menu"
         onClick={() => setAberto(true)}
-        className="grid h-10 w-10 place-items-center rounded-lg text-slate-600 hover:bg-slate-100"
+        className="grid h-10 w-10 place-items-center rounded-lg text-creme hover:bg-white/10"
       >
         <span className="flex flex-col gap-[5px]">
           <span className="block h-0.5 w-5 rounded bg-current" />
@@ -85,7 +85,7 @@ export function MenuDrawer({
             className="absolute inset-0 h-full w-full bg-black/40 backdrop-blur-sm"
           />
           {/* Painel */}
-          <aside className="absolute left-0 top-0 flex h-screen w-full max-w-md flex-col bg-white shadow-2xl">
+          <aside className="superficie absolute left-0 top-0 flex h-screen w-full max-w-md flex-col shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4">
               <Link href="/" onClick={fechar} className="flex items-center gap-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -22,7 +22,7 @@ export function CabecalhoPerfil({
   acaoRotulo: string;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+    <div className="superficie overflow-hidden rounded-2xl border border-ink-100">
       <div className="relative aspect-[29/10] w-full bg-gradient-to-br from-ink-900 to-ink-700">
         {bannerUrl && (
           // eslint-disable-next-line @next/next/no-img-element

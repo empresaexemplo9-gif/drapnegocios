@@ -86,7 +86,7 @@ export function PostMenu({
       </button>
 
       {aberto && (
-        <div className="absolute right-0 z-20 mt-1 w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+        <div className="superficie absolute right-0 z-20 mt-1 w-64 rounded-xl border border-ink-100 p-2 shadow-lg">
           {aba === 'menu' && (
             <div className="flex flex-col">
               {souDono && (
