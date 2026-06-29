@@ -6,8 +6,14 @@ import { iniciarConversaPorId } from '@/lib/server/chat';
 import { criarReuniao, emailDoUsuario } from '@/lib/server/agenda';
 import { captarDeUsuario, normalizarTipo, TIPOS_LEAD } from '@/lib/server/crm';
 import { postsDoPerfil } from '@/lib/server/feed';
-import { ehAdminPlataforma } from '@/lib/server/admin';
+import {
+  ehAdminPlataforma,
+  excluirUsuario,
+  alterarStatusUsuario,
+  statusDoUsuario,
+} from '@/lib/server/admin';
 import { PostCard } from '@/app/feed/PostCard';
+import { ConfirmarSubmit } from '@/components/ConfirmarSubmit';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +37,23 @@ export default async function PerfilPublicoPage({
   const posts = await postsDoPerfil(params.id);
   const ctx = await obterContexto();
   const souEu = ctx?.userId === params.id;
+  const souAdmin = ehAdminPlataforma(ctx?.email);
+  const statusPerfil = souAdmin && !souEu ? await statusDoUsuario(params.id) : null;
+
+  async function bloquearPerfil(formData: FormData) {
+    'use server';
+    const a = await obterContexto();
+    if (!a || !ehAdminPlataforma(a.email)) redirect('/entrar');
+    await alterarStatusUsuario(params.id, String(formData.get('suspender')) === '1');
+    redirect(`/perfil/${params.id}`);
+  }
+  async function excluirPerfil() {
+    'use server';
+    const a = await obterContexto();
+    if (!a || !ehAdminPlataforma(a.email)) redirect('/entrar');
+    await excluirUsuario(params.id);
+    redirect('/perfil');
+  }
 
   async function solicitar(formData: FormData) {
     'use server';
@@ -142,6 +165,34 @@ export default async function PerfilPublicoPage({
           </div>
         </div>
       </div>
+
+      {/* Controles do superadmin: bloquear / excluir qualquer perfil */}
+      {souAdmin && !souEu && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-ink-900 bg-ink-950 px-4 py-3 text-white">
+          <span className="text-sm font-bold">
+            🛠️ Moderação · status do perfil:{' '}
+            <span className={statusPerfil === 'suspenso' ? 'text-rose-300' : 'text-emerald-300'}>
+              {statusPerfil ?? 'desconhecido'}
+            </span>
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <form action={bloquearPerfil}>
+              <input type="hidden" name="suspender" value={statusPerfil === 'suspenso' ? '0' : '1'} />
+              <button className="rounded-lg bg-white/10 px-3 py-1.5 text-sm font-semibold hover:bg-white/20">
+                {statusPerfil === 'suspenso' ? 'Reativar perfil' : 'Bloquear perfil'}
+              </button>
+            </form>
+            <form action={excluirPerfil}>
+              <ConfirmarSubmit
+                mensagem={`Excluir o perfil de ${p.nome}? Isso apaga a conta e todos os dados dela. Não pode ser desfeito.`}
+                className="rounded-lg bg-rose-600 px-3 py-1.5 text-sm font-semibold hover:bg-rose-500"
+              >
+                Excluir perfil
+              </ConfirmarSubmit>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Captação: solicitar orçamento / demonstrar interesse */}
       {!souEu && (

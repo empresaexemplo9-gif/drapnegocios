@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/server/auth';
 import { contarNaoLidas } from '@/lib/server/notificacoes';
+import { ehAdminPlataforma } from '@/lib/server/admin';
 import { SairBotao } from './SairBotao';
+import { MenuDrawer } from './MenuDrawer';
 
 const navItens = [
   { href: '/feed', rotulo: 'Feed' },
@@ -17,7 +19,7 @@ const navItens = [
 export async function Header() {
   // Tolerante a má configuração: se a sessão falhar (ex.: sem NEXTAUTH_SECRET),
   // renderiza como deslogado em vez de quebrar todas as páginas.
-  let usuario: { name?: string | null; id?: string } | null = null;
+  let usuario: { name?: string | null; id?: string; email?: string | null } | null = null;
   try {
     const session = await getServerSession(authOptions);
     usuario = session?.user ?? null;
@@ -26,14 +28,19 @@ export async function Header() {
   }
 
   const naoLidas = usuario?.id ? await contarNaoLidas(usuario.id) : 0;
+  const admin = ehAdminPlataforma(usuario?.email);
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="container-app flex h-16 items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/drap-logo-ink.svg" alt="DRAP Business" className="h-9 w-auto" />
-        </Link>
+        <div className="flex items-center gap-2">
+          {/* Menu lateral (≡) com todas as opções — estilo redes sociais */}
+          <MenuDrawer logado={Boolean(usuario)} admin={admin} nome={usuario?.name} />
+          <Link href="/" className="flex items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/drap-logo-ink.svg" alt="DRAP Business" className="h-9 w-auto" />
+          </Link>
+        </div>
 
         <nav className="hidden items-center gap-1 sm:flex">
           {navItens.map((i) => (
@@ -75,27 +82,6 @@ export async function Header() {
           </Link>
         )}
       </div>
-
-      {/* Navegação mobile */}
-      <nav className="container-app flex items-center gap-1 overflow-x-auto pb-2 sm:hidden">
-        {usuario && (
-          <Link
-            href="/painel"
-            className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-bold text-marca-700 hover:bg-marca-50"
-          >
-            Painel
-          </Link>
-        )}
-        {navItens.map((i) => (
-          <Link
-            key={i.href}
-            href={i.href}
-            className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-100"
-          >
-            {i.rotulo}
-          </Link>
-        ))}
-      </nav>
     </header>
   );
 }

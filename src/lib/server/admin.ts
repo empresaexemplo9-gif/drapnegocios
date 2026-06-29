@@ -100,3 +100,9 @@ export async function alterarStatusUsuario(id: string, suspender: boolean): Prom
     data: { status: suspender ? 'suspenso' : 'ativo' },
   });
 }
+
+/** Status atual de um usuário (para alternar bloquear/reativar no perfil). */
+export async function statusDoUsuario(id: string): Promise<string | null> {
+  const u = await prisma.user.findUnique({ where: { id }, select: { status: true } });
+  return u?.status ?? null;
+}
