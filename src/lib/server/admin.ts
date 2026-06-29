@@ -91,7 +91,17 @@ export async function listarUsuariosAdmin(): Promise<UsuarioAdmin[]> {
 }
 
 export async function excluirUsuario(id: string): Promise<void> {
-  await prisma.user.delete({ where: { id } });
+  // Algumas relações com User não têm ON DELETE CASCADE (jobs, products,
+  // applications, reuniões), então o delete direto falha por constraint de FK.
+  // Apagamos os dependentes numa transação antes do usuário. As demais relações
+  // (profile, posts, chat, grupos, notificações, etc.) já são em cascata/SetNull.
+  await prisma.$transaction([
+    prisma.application.deleteMany({ where: { candidateId: id } }),
+    prisma.job.deleteMany({ where: { empresaId: id } }), // cascata apaga as candidaturas dessas vagas
+    prisma.product.deleteMany({ where: { sellerId: id } }),
+    prisma.reuniao.deleteMany({ where: { organizadorId: id } }), // cascata apaga os participantes
+    prisma.user.delete({ where: { id } }),
+  ]);
 }
 
 export async function alterarStatusUsuario(id: string, suspender: boolean): Promise<void> {

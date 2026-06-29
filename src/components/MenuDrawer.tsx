@@ -29,6 +29,21 @@ const CONTA: ItemMenu[] = [
   { href: '/painel/prime', rotulo: 'Prime (IA)', icone: '🤖' },
 ];
 
+// Configurações do acesso cliente
+const CONFIG: ItemMenu[] = [
+  { href: '/painel', rotulo: 'Editar meu perfil', icone: '⚙️' },
+  { href: '/planos', rotulo: 'Planos e assinatura', icone: '💳' },
+  { href: '/instalar', rotulo: 'Instalar o app', icone: '📱' },
+  { href: '/recuperar-senha', rotulo: 'Alterar/recuperar senha', icone: '🔑' },
+];
+
+// Ferramentas de edição do superadministrador
+const ADMIN_ITENS: ItemMenu[] = [
+  { href: '/admin', rotulo: 'Painel do admin', icone: '🛠️' },
+  { href: '/admin#denuncias', rotulo: 'Moderação / Denúncias', icone: '🚩' },
+  { href: '/admin/planos', rotulo: 'Editar preços dos planos', icone: '💲' },
+];
+
 /**
  * Menu lateral (drawer) acionado pelo botão de três barras (≡), no estilo das
  * redes sociais. Reúne todas as seções da plataforma num só lugar.
@@ -69,7 +84,7 @@ export function MenuDrawer({
             className="absolute inset-0 h-full w-full bg-black/40 backdrop-blur-sm"
           />
           {/* Painel */}
-          <aside className="absolute left-0 top-0 flex h-full w-80 max-w-[85vw] flex-col bg-white shadow-2xl">
+          <aside className="absolute left-0 top-0 flex h-full w-full max-w-md flex-col bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4">
               <Link href="/" onClick={fechar} className="flex items-center gap-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -95,11 +110,17 @@ export function MenuDrawer({
 
               {logado && <Secao titulo="Minha conta" itens={CONTA} onNavegar={fechar} />}
 
-              <div className="my-2 border-t border-slate-100" />
-              <ItemLink item={{ href: '/diretrizes', rotulo: 'Diretrizes da comunidade', icone: '📜' }} onNavegar={fechar} />
+              {logado && <Secao titulo="Configurações" itens={CONFIG} onNavegar={fechar} />}
+
               {admin && (
-                <ItemLink item={{ href: '/admin', rotulo: 'Admin da plataforma', icone: '🛠️' }} onNavegar={fechar} />
+                <Secao titulo="Administração (superadmin)" itens={ADMIN_ITENS} onNavegar={fechar} />
               )}
+
+              <div className="my-2 border-t border-slate-100" />
+              <ItemLink
+                item={{ href: '/diretrizes', rotulo: 'Diretrizes da comunidade', icone: '📜' }}
+                onNavegar={fechar}
+              />
             </nav>
 
             <div className="border-t border-slate-200 p-3">

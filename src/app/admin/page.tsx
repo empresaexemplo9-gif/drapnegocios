@@ -109,7 +109,7 @@ export default async function AdminPlataformaPage() {
       </div>
 
       {/* Denúncias / moderação */}
-      <div className="mt-10 flex items-center gap-2">
+      <div id="denuncias" className="mt-10 flex items-center gap-2 scroll-mt-20">
         <h2 className="text-xl font-black text-tinta">Denúncias</h2>
         {denuncias.length > 0 && (
           <span className="selo bg-rose-100 text-rose-700">{denuncias.length} pendente(s)</span>
