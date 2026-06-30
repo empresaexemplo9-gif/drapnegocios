@@ -15,7 +15,13 @@ export function Footer() {
             <Icon name="download" size={16} />
             Baixar o app
           </Link>
-          <span>Hub digital de negócios e conexões.</span>
+          <Link href="/termos" className="hover:text-ink-100">
+            Termos de Uso
+          </Link>
+          <Link href="/privacidade" className="hover:text-ink-100">
+            Privacidade
+          </Link>
+          <span className="hidden sm:inline">Hub digital de negócios e conexões.</span>
         </div>
         <p>© {new Date().getFullYear()} DRAP Business</p>
       </div>
