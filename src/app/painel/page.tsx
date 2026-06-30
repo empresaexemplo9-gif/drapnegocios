@@ -3,10 +3,12 @@ import { redirect } from 'next/navigation';
 import { obterContexto } from '@/lib/server/session';
 import { carregarUsuario, salvarPerfil } from '@/lib/server/repos';
 import { ehAdminPlataforma } from '@/lib/server/admin';
+import { contarUsuariosDoTenant } from '@/lib/server/conta';
 import { obterPlano } from '@/lib/planos';
 import { UploadImagem } from '@/components/UploadImagem';
 import { CabecalhoPerfil } from '@/components/CabecalhoPerfil';
 import { Icon } from '@/components/Icon';
+import { ExcluirContaBotao } from '@/components/ExcluirContaBotao';
 
 export const metadata = { title: 'Meu painel' };
 
@@ -40,6 +42,7 @@ export default async function PainelPage({
   const plano = obterPlano(u.plano);
   const completude = calcularCompletude(u);
   const admin = ehAdminPlataforma(ctx.email);
+  const totalUsuarios = await contarUsuariosDoTenant(ctx.tenantId);
 
   return (
     <div className="container-app py-12">
@@ -203,6 +206,19 @@ export default async function PainelPage({
           <button className="btn-primario">Salvar perfil</button>
         </div>
       </form>
+
+      {/* Zona de perigo */}
+      <div className="cartao mt-8 border-rose-200">
+        <h2 className="font-bold text-rose-700">Zona de perigo</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          {totalUsuarios <= 1
+            ? 'Você é o único usuário deste negócio — excluir sua conta apaga o negócio inteiro e todos os dados.'
+            : 'Exclua sua conta e seus dados pessoais deste negócio. Esta ação não pode ser desfeita.'}
+        </p>
+        <div className="mt-3">
+          <ExcluirContaBotao email={u.email} apagaNegocio={totalUsuarios <= 1} />
+        </div>
+      </div>
     </div>
   );
 }
