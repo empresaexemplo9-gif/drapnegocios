@@ -21,6 +21,7 @@ export function Formulario() {
   const [sociais, setSociais] = useState<string[]>([]);
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(false);
+  const [aceitou, setAceitou] = useState(false);
 
   // Pergunta ao servidor quais provedores sociais estão ativos.
   useEffect(() => {
@@ -63,6 +64,10 @@ export function Formulario() {
       setErro(checa.erros.join(' '));
       return;
     }
+    if (!aceitou) {
+      setErro('É necessário aceitar os Termos de Uso e a Política de Privacidade.');
+      return;
+    }
     setCarregando(true);
     const escolhido = TIPOS_CADASTRO.find((t) => t.v === String(f.get('tipoCadastro'))) ?? TIPOS_CADASTRO[0];
     const res = await fetch('/api/auth/register', {
@@ -75,6 +80,7 @@ export function Formulario() {
         nomeEmpresa: String(f.get('nomeEmpresa') || ''),
         tipoPerfil: escolhido.tipoPerfil,
         tipoProfile: escolhido.tipoProfile,
+        aceitouTermos: aceitou,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -183,7 +189,39 @@ export function Formulario() {
             <Campo nome="nomeEmpresa" tipo="text" rotulo="Nome do negócio/marca (opcional)" opcional />
             <Campo nome="email" tipo="email" rotulo="E-mail" />
             <Campo nome="senha" tipo="password" rotulo="Senha (8+, maiúscula, número, especial)" />
-            <button disabled={carregando} className="btn-primario w-full">
+
+            <label className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                name="aceitouTermos"
+                checked={aceitou}
+                onChange={(e) => setAceitou(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300"
+              />
+              <span className="text-xs text-slate-600">
+                Li e aceito os{' '}
+                <a
+                  href="/termos"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-marca-600 hover:underline"
+                >
+                  Termos de Uso
+                </a>{' '}
+                e a{' '}
+                <a
+                  href="/privacidade"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-marca-600 hover:underline"
+                >
+                  Política de Privacidade
+                </a>
+                .
+              </span>
+            </label>
+
+            <button disabled={carregando || !aceitou} className="btn-primario w-full disabled:cursor-not-allowed disabled:opacity-50">
               {carregando ? 'Criando…' : 'Criar conta'}
             </button>
             <p className="text-center text-xs text-slate-400">

@@ -23,6 +23,10 @@ export const cadastroSchema = z.object({
   tipoProfile: z
     .enum(['candidato', 'empresa_contratante', 'vendedor', 'comprador'])
     .default('empresa_contratante'),
+  // Aceite obrigatório dos Termos de Uso e da Política de Privacidade.
+  aceitouTermos: z.literal(true, {
+    errorMap: () => ({ message: 'É necessário aceitar os Termos de Uso e a Política de Privacidade.' }),
+  }),
 });
 export type CadastroInput = z.infer<typeof cadastroSchema>;
 
