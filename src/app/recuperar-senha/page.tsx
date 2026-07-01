@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { solicitarReset } from '@/lib/server/recuperacao';
 import { emailAtivo } from '@/lib/server/email';
-import { rateLimit } from '@/lib/server/rate-limit';
+import { checarRate } from '@/lib/server/rate-limit';
 
 export const metadata = { title: 'Recuperar senha' };
 export const dynamic = 'force-dynamic';
@@ -14,7 +14,7 @@ export default function RecuperarSenhaPage({ searchParams }: { searchParams?: { 
     // Rate-limit por IP contra spam de e-mail e enumeração por timing.
     // Resposta neutra mesmo quando limitado (não revela nada ao cliente).
     const ip = headers().get('x-forwarded-for')?.split(',')[0]?.trim() || 'desconhecido';
-    if (rateLimit(`reset:${ip}`, 5, 60_000).permitido) {
+    if ((await checarRate(`reset:${ip}`, 5, 60_000)).permitido) {
       await solicitarReset(String(formData.get('email') ?? ''));
     }
     redirect('/recuperar-senha?enviado=1');

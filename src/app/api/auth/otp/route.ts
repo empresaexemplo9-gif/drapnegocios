@@ -9,7 +9,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/server/prisma';
 import { gerarOtp, verificarOtp, enviarOtp } from '@/lib/server/otp';
-import { rateLimit } from '@/lib/server/rate-limit';
+import { checarRate } from '@/lib/server/rate-limit';
 import { otpSolicitarSchema, otpVerificarSchema } from '@/lib/validation';
 
 function ipDe(req: Request): string {
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   if (acao === 'solicitar') {
     const parse = otpSolicitarSchema.safeParse(corpo);
     if (!parse.success) return NextResponse.json({ erro: 'Dados inválidos' }, { status: 400 });
-    if (!rateLimit(`otp:${ip}:${parse.data.email}`, 3, 60_000).permitido) {
+    if (!(await checarRate(`otp:${ip}:${parse.data.email}`, 3, 60_000)).permitido) {
       return NextResponse.json({ erro: 'Aguarde antes de pedir outro código.' }, { status: 429 });
     }
     const user = await acharUser(parse.data.email, parse.data.tenantSlug);
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     const parse = otpVerificarSchema.safeParse(corpo);
     if (!parse.success) return NextResponse.json({ erro: 'Dados inválidos' }, { status: 400 });
     // Limita tentativas de verificação por IP+e-mail (anti brute-force do código).
-    if (!rateLimit(`otpv:${ip}:${parse.data.email}`, 5, 60_000).permitido) {
+    if (!(await checarRate(`otpv:${ip}:${parse.data.email}`, 5, 60_000)).permitido) {
       return NextResponse.json({ erro: 'Muitas tentativas. Aguarde um instante.' }, { status: 429 });
     }
     const user = await acharUser(parse.data.email, parse.data.tenantSlug);
