@@ -12,7 +12,9 @@ import { obterContexto } from '@/lib/server/session';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const TIPOS_OK = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'];
+// SVG fica fora de propósito: como o blob é servido publicamente, um SVG
+// malicioso viraria XSS armazenado ao ser aberto pela URL direta.
+const TIPOS_OK = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 
 /**
  * Diz só se o upload está disponível (booleano). Exige sessão e NÃO expõe

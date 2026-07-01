@@ -47,6 +47,10 @@ export async function POST(req: Request) {
   if (acao === 'verificar') {
     const parse = otpVerificarSchema.safeParse(corpo);
     if (!parse.success) return NextResponse.json({ erro: 'Dados inválidos' }, { status: 400 });
+    // Limita tentativas de verificação por IP+e-mail (anti brute-force do código).
+    if (!rateLimit(`otpv:${ip}:${parse.data.email}`, 5, 60_000).permitido) {
+      return NextResponse.json({ erro: 'Muitas tentativas. Aguarde um instante.' }, { status: 429 });
+    }
     const user = await acharUser(parse.data.email, parse.data.tenantSlug);
     if (!user || !(await verificarOtp(user.id, parse.data.codigo))) {
       return NextResponse.json({ erro: 'Código inválido ou expirado.' }, { status: 400 });

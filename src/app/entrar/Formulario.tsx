@@ -16,7 +16,11 @@ const TIPOS_CADASTRO = [
 export function Formulario() {
   const router = useRouter();
   const params = useSearchParams();
-  const proximo = params.get('proximo') ?? '/painel';
+  // Evita open redirect: só aceita caminho relativo interno (/...), nunca URL
+  // absoluta (https://...) nem protocol-relative (//host).
+  const proximoBruto = params.get('proximo') ?? '/painel';
+  const proximo =
+    proximoBruto.startsWith('/') && !proximoBruto.startsWith('//') ? proximoBruto : '/painel';
   const [aba, setAba] = useState<'entrar' | 'criar'>(params.get('aba') === 'criar' ? 'criar' : 'entrar');
   const [sociais, setSociais] = useState<string[]>([]);
   const [erro, setErro] = useState('');

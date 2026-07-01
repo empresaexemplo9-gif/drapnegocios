@@ -25,7 +25,8 @@ DECLARE
   t text;
   tabelas text[] := ARRAY[
     'users', 'profiles', 'jobs', 'applications', 'products',
-    'subscriptions', 'audit_logs', 'notifications', 'ai_analysis', 'convites'
+    'subscriptions', 'audit_logs', 'notifications', 'ai_analysis', 'convites',
+    'leads', 'clientes', 'propostas'
   ];
 BEGIN
   FOREACH t IN ARRAY tabelas LOOP
