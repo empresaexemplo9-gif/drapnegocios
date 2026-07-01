@@ -16,6 +16,11 @@ const nextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'X-DNS-Prefetch-Control', value: 'off' },
           { key: 'Permissions-Policy', value: 'geolocation=(), browsing-topics=()' },
+          // CSP conservadora: bloqueia injeção de <base>, clickjacking e
+          // plugins (<object>/<embed>), sem restringir script/style/img — assim
+          // não quebra o Next nem imagens de usuários. Uma CSP de script-src
+          // com nonces pode ser adicionada depois.
+          { key: 'Content-Security-Policy', value: "base-uri 'self'; frame-ancestors 'self'; object-src 'none'" },
         ],
       },
     ];
