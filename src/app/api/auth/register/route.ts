@@ -52,6 +52,20 @@ export async function POST(req: Request) {
   }
   const { nome, email, senha, conviteToken, nomeEmpresa, tipoPerfil, tipoProfile } = parse.data;
   const emailNorm = email.toLowerCase();
+
+  // Não permite perfil duplicado: um e-mail = uma única conta em toda a
+  // plataforma (independe do negócio/convite).
+  const jaExiste = await prisma.user.findFirst({
+    where: { email: emailNorm },
+    select: { id: true },
+  });
+  if (jaExiste) {
+    return NextResponse.json(
+      { erro: 'Este e-mail já tem uma conta. Faça login ou use "Esqueci a senha".' },
+      { status: 409 },
+    );
+  }
+
   const senhaHash = await hashSenha(senha);
 
   try {
