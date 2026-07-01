@@ -14,6 +14,7 @@ import { prisma } from './prisma';
 import { conferirSenha } from './password';
 import { registrarAudit } from './audit';
 import { slugUnico } from './tenant';
+import { rateLimit } from './rate-limit';
 
 const MAX_TENTATIVAS = 5;
 const BLOQUEIO_MS = 15 * 60 * 1000;
@@ -81,9 +82,17 @@ export const authOptions: NextAuthOptions = {
         senha: { label: 'Senha', type: 'password' },
         tenantSlug: { label: 'Empresa', type: 'text' },
       },
-      async authorize(cred) {
+      async authorize(cred, req) {
         if (!cred?.email || !cred?.senha) return null;
         const email = cred.email.toLowerCase();
+
+        // Rate-limit por IP: impede brute-force distribuído e DoS por lockout
+        // (o bloqueio por conta continua valendo em paralelo).
+        const cabecalhos = (req?.headers ?? {}) as Record<string, string | undefined>;
+        const ip = cabecalhos['x-forwarded-for']?.split(',')[0]?.trim() || 'desconhecido';
+        if (!rateLimit(`login:${ip}`, 10, 60_000).permitido) {
+          throw new Error('Muitas tentativas de login. Aguarde um instante.');
+        }
 
         // Resolve o usuário: com slug, no tenant indicado; sem slug, pelo e-mail
         // (se ele existir em um único negócio). Em múltiplos, exige o slug.
