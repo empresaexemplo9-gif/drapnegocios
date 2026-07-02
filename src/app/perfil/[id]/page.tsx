@@ -11,6 +11,7 @@ import {
   excluirUsuario,
   alterarStatusUsuario,
   statusDoUsuario,
+  definirSenhaUsuario,
 } from '@/lib/server/admin';
 import { PostCard } from '@/app/feed/PostCard';
 import { ConfirmarSubmit } from '@/components/ConfirmarSubmit';
@@ -30,7 +31,7 @@ export default async function PerfilPublicoPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams?: { interesse?: string; tipo?: string; enviado?: string };
+  searchParams?: { interesse?: string; tipo?: string; enviado?: string; senha?: string };
 }) {
   const p = await perfilPublicoPorId(params.id);
   if (!p) notFound();
@@ -54,6 +55,13 @@ export default async function PerfilPublicoPage({
     if (!a || !ehAdminPlataforma(a.email)) redirect('/entrar');
     await excluirUsuario(params.id);
     redirect('/perfil');
+  }
+  async function definirSenha(formData: FormData) {
+    'use server';
+    const a = await obterContexto();
+    if (!a || !ehAdminPlataforma(a.email)) redirect('/entrar');
+    const r = await definirSenhaUsuario(params.id, String(formData.get('senha') ?? ''));
+    redirect(`/perfil/${params.id}?senha=${r.ok ? 'ok' : 'erro'}`);
   }
 
   async function solicitar(formData: FormData) {
@@ -193,6 +201,25 @@ export default async function PerfilPublicoPage({
               </ConfirmarSubmit>
             </form>
           </div>
+
+          {/* Definir nova senha (sem depender de e-mail) */}
+          <form action={definirSenha} className="flex w-full flex-wrap items-center gap-2 border-t border-white/10 pt-3">
+            <input
+              type="text"
+              name="senha"
+              placeholder="Nova senha (8+, maiúscula, número, especial)"
+              className="flex-1 rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-sm text-creme placeholder:text-ink-300 outline-none focus:border-white/40"
+            />
+            <button className="rounded-lg bg-white/10 px-3 py-1.5 text-sm font-semibold hover:bg-white/20">
+              Definir nova senha
+            </button>
+            {searchParams?.senha === 'ok' && (
+              <span className="text-xs font-semibold text-emerald-300">Senha atualizada.</span>
+            )}
+            {searchParams?.senha === 'erro' && (
+              <span className="text-xs font-semibold text-rose-300">Senha inválida (regra não atendida).</span>
+            )}
+          </form>
         </div>
       )}
 

@@ -6,6 +6,7 @@
  * vírgula). Defina essa variável na Vercel com o seu e-mail.
  */
 import { prisma } from './prisma';
+import { hashSenha, politicaSenha } from './password';
 
 export function ehAdminPlataforma(email?: string | null): boolean {
   if (!email) return false;
@@ -115,6 +116,25 @@ export async function alterarStatusUsuario(id: string, suspender: boolean): Prom
 export async function statusDoUsuario(id: string): Promise<string | null> {
   const u = await prisma.user.findUnique({ where: { id }, select: { status: true } });
   return u?.status ?? null;
+}
+
+/**
+ * Superadmin define uma nova senha para um usuário (sem depender de e-mail).
+ * Aplica a política de senha, zera o bloqueio de tentativas e reativa a conta.
+ */
+export async function definirSenhaUsuario(
+  id: string,
+  senha: string,
+): Promise<{ ok: boolean; erro?: string }> {
+  const regra = politicaSenha(senha);
+  if (!regra.ok) return { ok: false, erro: regra.erros.join(' ') };
+  const senhaHash = await hashSenha(senha);
+  const r = await prisma.user.updateMany({
+    where: { id },
+    data: { senhaHash, status: 'ativo', tentativasLogin: 0, bloqueadoAte: null },
+  });
+  if (r.count === 0) return { ok: false, erro: 'Usuário não encontrado.' };
+  return { ok: true };
 }
 
 /**
