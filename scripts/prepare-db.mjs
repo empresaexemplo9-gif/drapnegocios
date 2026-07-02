@@ -59,6 +59,53 @@ try {
   console.error('[prepare-db] ERRO no db push (tabelas NÃO criadas):', e?.message ?? e);
 }
 
+// Recuperação de acesso de emergência (sem depender de e-mail).
+// Defina na Vercel: RECUPERAR_ADMIN_EMAIL e RECUPERAR_ADMIN_SENHA, faça um
+// redeploy e depois REMOVA as duas variáveis. O build redefine a senha da conta
+// canônica (a mais antiga com esse e-mail), garante super_admin/ativo e
+// desconflita duplicados renomeando o e-mail deles (não apaga dados).
+if (process.env.RECUPERAR_ADMIN_EMAIL && process.env.RECUPERAR_ADMIN_SENHA) {
+  try {
+    const { PrismaClient } = await import('@prisma/client');
+    const bcrypt = (await import('bcryptjs')).default;
+    const prisma = new PrismaClient();
+    const email = process.env.RECUPERAR_ADMIN_EMAIL.trim().toLowerCase();
+    const users = await prisma.user.findMany({
+      where: { email },
+      include: { tenant: { select: { slug: true } } },
+      orderBy: { criadoEm: 'asc' },
+    });
+    if (users.length === 0) {
+      console.warn(`[recuperar-admin] nenhum usuário com e-mail ${email}.`);
+    } else {
+      const canonica = users[0];
+      const senhaHash = await bcrypt.hash(process.env.RECUPERAR_ADMIN_SENHA, 12);
+      await prisma.user.update({
+        where: { id: canonica.id },
+        data: {
+          senhaHash,
+          status: 'ativo',
+          papel: 'super_admin',
+          tentativasLogin: 0,
+          bloqueadoAte: null,
+          emailVerificadoEm: new Date(),
+        },
+      });
+      let i = 0;
+      for (const u of users.slice(1)) {
+        i += 1;
+        await prisma.user.update({ where: { id: u.id }, data: { email: `${email}.dup${i}` } });
+      }
+      console.log(
+        `[recuperar-admin] OK: senha redefinida para ${email} (tenant slug="${canonica.tenant.slug}"); ${i} duplicado(s) desconflitado(s).`,
+      );
+    }
+    await prisma.$disconnect();
+  } catch (e) {
+    console.error('[recuperar-admin] falhou (segue o build):', e?.message ?? e);
+  }
+}
+
 if (process.env.LIMPAR_DEMO === '1') {
   try {
     const { PrismaClient } = await import('@prisma/client');
