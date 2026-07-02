@@ -3,6 +3,11 @@ const nextConfig = {
   // Lint roda separadamente; não bloqueia o build do MVP.
   eslint: { ignoreDuringBuilds: true },
 
+  // nodemailer usa require dinâmico: precisa ser tratado como pacote externo do
+  // servidor, senão o bundle das server actions (ex.: recuperação de senha)
+  // quebra o import('nodemailer') e o envio SMTP falha silenciosamente.
+  experimental: { serverComponentsExternalPackages: ['nodemailer'] },
+
   // Cabeçalhos de segurança (higiene básica). Evitamos CSP estrita e não
   // restringimos câmera/microfone para não quebrar as calls (Jitsi).
   async headers() {

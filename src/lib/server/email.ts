@@ -61,6 +61,11 @@ async function enviarPorSmtp(e: Email): Promise<boolean> {
       port: porta,
       secure,
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+      // Timeouts curtos: em serverless, falha rápido e loga em vez de estourar o
+      // tempo da função sem deixar rastro.
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 15_000,
     });
     await transport.sendMail({
       from: remetente(),
@@ -70,7 +75,11 @@ async function enviarPorSmtp(e: Email): Promise<boolean> {
     });
     return true;
   } catch (err) {
-    console.error('[email] SMTP falhou:', err);
+    const x = err as { code?: string; command?: string; response?: string; message?: string };
+    console.error(
+      `[email] SMTP falhou host=${process.env.SMTP_HOST} porta=${process.env.SMTP_PORT ?? 587} ` +
+        `code=${x.code ?? '-'} command=${x.command ?? '-'} response="${x.response ?? ''}" msg="${x.message ?? String(err)}"`,
+    );
     return false;
   }
 }
