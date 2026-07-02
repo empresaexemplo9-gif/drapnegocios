@@ -58,7 +58,8 @@ export default function RecuperarSenhaPage({ searchParams }: { searchParams?: { 
             </p>
             {!emailAtivo() && (
               <p className="text-center text-[11px] text-amber-600">
-                (E-mail ainda não configurado — defina RESEND_API_KEY para envio real.)
+                ⚠️ Envio de e-mail ainda não configurado — o link não será enviado.
+                Configure SMTP (SMTP_HOST/USER/PASS) ou RESEND_API_KEY na Vercel.
               </p>
             )}
           </form>
