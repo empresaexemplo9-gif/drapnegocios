@@ -40,6 +40,8 @@ export default async function PerfilPublicoPage({
   const ctx = await obterContexto();
   const souEu = ctx?.userId === params.id;
   const souAdmin = ehAdminPlataforma(ctx?.email);
+  // Perfil oculto só é visível para o próprio dono ou para o admin da plataforma.
+  if (!p.visibilidadePublica && !souEu && !souAdmin) notFound();
   const statusPerfil = souAdmin && !souEu ? await statusDoUsuario(params.id) : null;
 
   async function bloquearPerfil(formData: FormData) {
@@ -115,6 +117,13 @@ export default async function PerfilPublicoPage({
       <Link href="/perfil" className="text-sm font-semibold text-marca-600">
         ← Buscar perfis
       </Link>
+
+      {souEu && !p.visibilidadePublica && (
+        <p className="mt-3 rounded-lg bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700">
+          Seu perfil está <strong>oculto</strong> da busca pública — só você e a administração o veem.
+          Ative “Aparecer na busca pública” no <Link href="/painel" className="underline">painel</Link> para deixá-lo visível.
+        </p>
+      )}
 
       {/* Banner + avatar */}
       <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">

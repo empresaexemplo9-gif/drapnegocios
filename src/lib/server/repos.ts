@@ -116,6 +116,7 @@ export interface PerfilPublico {
   bio: string;
   destaque: string | null;
   score: number;
+  visibilidadePublica: boolean;
 }
 
 export interface FiltrosPerfil {
@@ -194,8 +195,10 @@ export async function buscarPerfis(f: FiltrosPerfil): Promise<PerfilPublico[]> {
 }
 
 export async function perfilPublicoPorId(userId: string): Promise<PerfilPublico | null> {
+  // Busca pelo userId (sem filtrar por visibilidade). Quem chama decide se pode
+  // ver: o dono e o admin veem mesmo com o perfil oculto; visitantes, só público.
   const p = await prisma.profile.findFirst({
-    where: { userId, visibilidadePublica: true },
+    where: { userId },
     include: {
       user: {
         select: {
@@ -232,6 +235,7 @@ export async function perfilPublicoPorId(userId: string): Promise<PerfilPublico 
     bio: p.bio ?? '',
     destaque: rotuloDestaque(dePlanoDb(p.tenant.plano)),
     score,
+    visibilidadePublica: p.visibilidadePublica,
   };
 }
 
